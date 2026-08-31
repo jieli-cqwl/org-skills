@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -37,6 +39,8 @@ class OwnershipInventoryTests(unittest.TestCase):
         self.assertIn(".superpowers/", inventory.delete_from_active_head)
         self.assertIn(".claude/skills/darwin-skill/cards/", inventory.delete_from_active_head)
         self.assertIn("findings.md", inventory.delete_from_active_head)
+        self.assertIn("progress.md", inventory.delete_from_active_head)
+        self.assertIn("task_plan.md", inventory.delete_from_active_head)
         self.assertIn("tools/eval/results/", inventory.prune_by_inbound_ref)
         self.assertIn("claude-code-engineering/", inventory.out_of_scope)
         self.assertEqual(
@@ -91,6 +95,54 @@ class OwnershipInventoryTests(unittest.TestCase):
         self.assertTrue(set(PERSONAL_SKILLS).isdisjoint(TEAM_SKILLS))
         self.assertTrue(set(DAILY_SKILLS).isdisjoint(TEAM_CLAUDE_ONLY_SKILLS))
 
+    def test_short_name_cross_repo_callee_is_not_dropped(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            skill = root / "shared" / "skills" / "fix" / "SKILL.md"
+            skill.parent.mkdir(parents=True)
+            skill.write_text(
+                "---\nname: fix\n---\nCall `prd` before writing.\n",
+                encoding="utf-8",
+            )
+            inventory = scan_ownership(root)
+            recorded = (
+                ("fix", "prd") in inventory.hard_edges
+                or ("fix", "prd") in inventory.non_hard_edges
+                or any("prd" in item for item in inventory.unclassified_edges)
+                or any("prd" in item for item in inventory.unmapped)
+            )
+            self.assertTrue(recorded, "short-name callee prd must be recorded")
+            with self.assertRaises(OwnershipError) as ctx:
+                assert_complete(inventory)
+            self.assertIn("prd", str(ctx.exception).lower())
+
+    def test_git_ls_files_failure_does_not_look_like_empty_tree(self) -> None:
+        failed = subprocess.CompletedProcess(
+            args=["git", "ls-files"],
+            returncode=128,
+            stdout=b"",
+            stderr=b"fatal: not a git repository",
+        )
+        with mock.patch(
+            "tools.split.generate_ownership_inventory.subprocess.run",
+            return_value=failed,
+        ):
+            with self.assertRaises(OwnershipError) as ctx:
+                scan_ownership(ROOT)
+        self.assertIn("git ls-files", str(ctx.exception).lower())
+
+    def test_ledger_inbound_ref_in_tools_or_docs_is_classified(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "findings.md").write_text("stale ledger\n", encoding="utf-8")
+            docs = root / "docs" / "usage.md"
+            docs.parent.mkdir(parents=True)
+            docs.write_text("Read findings.md before changing inventory.\n", encoding="utf-8")
+            inventory = scan_ownership(root)
+            self.assertNotIn("findings.md", inventory.delete_from_active_head)
+            self.assertIn("findings.md", inventory.keep_for_inbound_ref)
+
 
 if __name__ == "__main__":
     unittest.main()
+

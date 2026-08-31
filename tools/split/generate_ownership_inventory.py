@@ -14,15 +14,19 @@ from typing import Iterable
 from tools.split.ownership_allowlists import (
     ACTION_DELETE,
     BASE_FILES,
+    DAILY_SKILLS,
     GRILL_OBSIDIAN_SKILLS,
     MISSING_FROM_GIT_FETCH_IN_PLAN_2,
     OUT_OF_SCOPE_PATHS,
+    PERSONAL_SKILLS,
     REJECTED_SKILLS,
     REPO_BASE,
     REPO_DAILY,
     REPO_PERSONAL,
     REPO_TEAM,
     STALE_RUNTIME_TRACES,
+    TEAM_CLAUDE_ONLY_SKILLS,
+    TEAM_SKILLS,
     is_rejected,
     is_stale_trace,
     skill_repo,
@@ -48,6 +52,18 @@ KNOWN_CROSS_REPO_EDGES: dict[tuple[str, str], str] = {
     ("grill-with-docs", "domain-modeling"): EDGE_HARD,
     ("qa", "webapp-testing"): EDGE_OPTIONAL,
     ("skill-quality-audit", "brainstorming"): EDGE_DOCUMENTATION_ONLY,
+    ("deep-research", "pdf"): EDGE_DOCUMENTATION_ONLY,
+    ("design", "architecture"): EDGE_DOCUMENTATION_ONLY,
+    ("delivery-estimator", "architecture"): EDGE_DOCUMENTATION_ONLY,
+    ("feishu-docs", "docx"): EDGE_DOCUMENTATION_ONLY,
+    ("product-manager", "architecture"): EDGE_DOCUMENTATION_ONLY,
+    ("qft-group-chat-export", "xlsx"): EDGE_DOCUMENTATION_ONLY,
+    ("review", "commit"): EDGE_DOCUMENTATION_ONLY,
+    ("skill-pull", "commit"): EDGE_DOCUMENTATION_ONLY,
+    ("skill-pull", "worktree"): EDGE_DOCUMENTATION_ONLY,
+    ("tech-lead", "architecture"): EDGE_DOCUMENTATION_ONLY,
+    ("tech-lead", "worktree"): EDGE_DOCUMENTATION_ONLY,
+    ("test-design", "architecture"): EDGE_DOCUMENTATION_ONLY,
 }
 
 LEDGER_FILES = ("findings.md", "progress.md", "task_plan.md")
@@ -81,6 +97,7 @@ class Inventory:
     missing_status: dict[str, str] = field(default_factory=dict)
     hard_edges: dict[tuple[str, str], str] = field(default_factory=dict)
     unclassified_edges: list[str] = field(default_factory=list)
+    keep_for_inbound_ref: list[str] = field(default_factory=list)
 
 
 def _rel(root: Path, path: Path) -> str:
@@ -94,14 +111,20 @@ def _is_git_worktree(root: Path) -> bool:
 def _git_ls_files(root: Path, *paths: str) -> list[str]:
     if not _is_git_worktree(root):
         return []
-    completed = subprocess.run(
-        ["git", "-C", str(root), "ls-files", "-z", "--", *paths],
-        capture_output=True,
-        check=False,
-        timeout=30,
-    )
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "-z", "--", *paths],
+            capture_output=True,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise OwnershipError(f"git ls-files failed in {root}: {exc}") from exc
     if completed.returncode != 0:
-        return []
+        stderr = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise OwnershipError(
+            f"git ls-files failed in {root} (exit {completed.returncode}): {stderr or 'no stderr'}"
+        )
     return [item for item in completed.stdout.decode("utf-8").split("\0") if item]
 
 
@@ -110,10 +133,10 @@ def _record(bucket: dict[str, list[str]], atom: str, owner: str) -> None:
 
 
 def _skill_name_pattern(names: Iterable[str]) -> re.Pattern[str] | None:
-    distinctive = [name for name in names if "-" in name or name in {"brainstorming", "grilling"}]
+    # Include unhyphenated names (prd, qa, fix, ux). Longest match first.
+    distinctive = sorted({name for name in names if name}, key=len, reverse=True)
     if not distinctive:
         return None
-    distinctive = sorted(set(distinctive), key=len, reverse=True)
     return re.compile(r"(?<![A-Za-z0-9_-])(" + "|".join(re.escape(n) for n in distinctive) + r")(?![A-Za-z0-9_-])")
 
 
@@ -210,19 +233,38 @@ def _parse_install_sh_selected(install_sh: Path) -> set[str]:
     return selected
 
 
+def _is_inbound_ref_skip(rel: str, filename: str) -> bool:
+    if filename in {"test-ownership-inventory.py", "generate_ownership_inventory.py"}:
+        return True
+    parts = Path(rel).parts
+    if any(part in SKIP_CROSS_REPO_PARTS for part in parts):
+        return True
+    if rel.startswith("tools/eval/results/"):
+        return True
+    # Split spec/plan name the ledgers as delete candidates; they are not consumers.
+    if rel.startswith("docs/superpowers/specs/") or rel.startswith("docs/superpowers/plans/"):
+        return True
+    return False
+
+
 def _has_inbound_ref(root: Path, filename: str) -> bool:
     token = re.compile(
         rf"(^|[^A-Za-z0-9._-]){re.escape(filename)}([^A-Za-z0-9._-]|$)"
     )
     # Classification tests name the ledgers; they are not consumers of the files.
-    skip_names = {"test-ownership-inventory.py", "generate_ownership_inventory.py"}
-    for search in (root / "tests", root / "contracts"):
+    for search in (
+        root / "tests",
+        root / "contracts",
+        root / "tools",
+        root / "docs",
+    ):
         if not search.exists():
             continue
         for path in search.rglob("*"):
             if not path.is_file() or path.suffix not in INBOUND_REF_SUFFIXES:
                 continue
-            if path.name in skip_names:
+            rel = _rel(root, path)
+            if _is_inbound_ref_skip(rel, path.name):
                 continue
             try:
                 text = path.read_text(encoding="utf-8")
@@ -252,7 +294,8 @@ def _cross_repo_kind_for_path(rel_path: str, caller: str, callee: str) -> str | 
     parts = Path(rel_path).parts
     if "evals" in parts or rel_path.startswith("tests/") or rel_path.startswith("tools/eval/"):
         return EDGE_TEST_ONLY
-    if rel_path.startswith("docs/"):
+    # Vendor trees mention Skill names as prose; first-party SKILL.md hits stay fail-closed.
+    if rel_path.startswith("docs/") or rel_path.startswith("community/"):
         return EDGE_DOCUMENTATION_ONLY
     return None
 
@@ -262,7 +305,14 @@ def _scan_cross_repo_edges(
     skill_dirs: list[tuple[str, Path]],
     present_names: set[str],
 ) -> tuple[dict[tuple[str, str], str], dict[tuple[str, str], str], list[str]]:
-    scan_names = set(present_names) | set(GRILL_OBSIDIAN_SKILLS) | set(REJECTED_SKILLS)
+    scan_names = (
+        set(present_names)
+        | set(DAILY_SKILLS)
+        | set(PERSONAL_SKILLS)
+        | set(TEAM_SKILLS)
+        | set(TEAM_CLAUDE_ONLY_SKILLS)
+        | set(REJECTED_SKILLS)
+    )
     pattern = _skill_name_pattern(scan_names)
     hard: dict[tuple[str, str], str] = {}
     non_hard: dict[tuple[str, str], str] = {}
@@ -308,12 +358,14 @@ def _scan_cross_repo_edges(
             key = (caller, callee)
             kind = _cross_repo_kind_for_path(rel, caller, callee)
             if kind is None:
-                unclassified.append(f"{caller}->{callee} in {rel}")
+                label = f"{caller}->{callee} in {rel}"
+                if label not in unclassified:
+                    unclassified.append(label)
                 continue
             if kind == EDGE_HARD:
                 hard[key] = kind
             elif kind in NON_HARD_EDGE_KINDS:
-                non_hard[key] = kind
+                non_hard.setdefault(key, kind)
     return hard, non_hard, unclassified
 
 
@@ -330,6 +382,7 @@ def scan_ownership(repo_root: Path) -> Inventory:
     non_installable: list[str] = []
     delete_from_active_head: list[str] = []
     prune_by_inbound_ref: list[str] = []
+    keep_for_inbound_ref: list[str] = []
     out_of_scope: list[str] = []
     unmapped: list[str] = []
 
@@ -510,7 +563,12 @@ def scan_ownership(repo_root: Path) -> Inventory:
 
     for filename in LEDGER_FILES:
         path = root / filename
-        if path.is_file() and not _has_inbound_ref(root, filename):
+        if not path.is_file():
+            continue
+        if _has_inbound_ref(root, filename):
+            keep_for_inbound_ref.append(filename)
+            _record(mappings, f"generated:{filename}", "KEEP_FOR_INBOUND_REF")
+        else:
             delete_from_active_head.append(filename)
             _record(mappings, f"generated:{filename}", ACTION_DELETE)
 
@@ -532,9 +590,19 @@ def scan_ownership(repo_root: Path) -> Inventory:
         _record(mappings, f"edge:{key[0]}->{key[1]}", kind)
     for key, kind in non_hard_edges.items():
         _record(mappings, f"edge:{key[0]}->{key[1]}", kind)
+    classified_edge_atoms = {
+        f"edge:{caller}->{callee}"
+        for caller, callee in list(hard_edges) + list(non_hard_edges)
+    }
+    unclassified_atoms: set[str] = set()
     for item in unclassified:
         unmapped.append(item)
-        _record(mappings, f"edge:{item}", "unmapped")
+        edge = item.split(" in ", 1)[0]
+        atom = f"edge:{edge}"
+        if atom in classified_edge_atoms or atom in unclassified_atoms:
+            continue
+        unclassified_atoms.add(atom)
+        _record(mappings, atom, "unmapped")
 
     duplicates = sorted(
         {
@@ -568,6 +636,7 @@ def scan_ownership(repo_root: Path) -> Inventory:
         missing_status=missing_status,
         hard_edges=hard_edges,
         unclassified_edges=unclassified,
+        keep_for_inbound_ref=keep_for_inbound_ref,
     )
 
 
