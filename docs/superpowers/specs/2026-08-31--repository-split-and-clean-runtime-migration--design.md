@@ -1,66 +1,104 @@
 # Repository Split and Clean Runtime Migration Design
 
-**Status:** Approved in conversation on 2026-08-31; written-spec review pending.
+**Status:** The simplified architecture was approved in conversation on 2026-08-31. This rewritten specification is pending the user's written-spec review and does not authorize runtime mutation.
 
-**Authority:** This document is the design source for the repository split and one-time local runtime migration. It does not enter `contracts/active-doc-scope.yaml`, replace standard-chain canonical artifacts, or authorize implementation before written-spec review.
+**Authority:** This document is the single design source for the repository split and the one-time local runtime migration. It does not replace standard-chain canonical artifacts or enter `contracts/active-doc-scope.yaml`.
 
 ## Goal
 
-Split the current monolithic repository into one base-configuration repository and three scenario-specific Skill repositories, while leaving the local Claude and Codex runtimes with only the base and daily repositories installed.
+Split the current monolithic repository into one base-configuration repository and three Skill repositories with different maintenance purposes. A user or LLM chooses what to install for the current environment; the repositories do not encode Profiles or silently install sibling repositories.
 
-The result must have explicit ownership, independent installation and removal, Git-based recovery, no persistent content backups, and no residue from the old monolithic installation.
+After the split, this machine must contain a fresh installation of only:
+
+- `base-config`;
+- `daily-skills`.
+
+The old monolithic installation must be removed completely. Recovery relies on pushed Git commits, tags, locked upstream refs, and provenance—not on persistent local content backups.
+
+## Design Principle
+
+Repository ownership and runtime composition are different decisions:
+
+- A repository answers **who maintains this resource**.
+- An installation command answers **what this environment needs now**.
+- A dependency is declared only when source evidence proves the caller cannot fulfill its contract without that resource.
+- A dependency declaration identifies the smallest required unit; it does not justify a Profile, a central orchestrator, or a shared package-manager library. A whole-repository dependency is allowed only when source evidence requires that repository's complete contract.
+
+This is the minimum architecture that preserves clean ownership without replacing the monorepo with a more complicated distributed monorepo.
+
+## Confirmed Decisions
+
+1. There are four logical repositories: `base-config`, `daily-skills`, `team-skills`, and `personal-skills`.
+2. The current repository remains `team-skills` and retains its full Git history. The other three repositories start from snapshot commits with provenance.
+3. `base-config` contains the global assistant entry, rules, and references. It contains no Skills, hooks, agents, protocols, source locks, or standard-chain runtime.
+4. All repository-managed `hooks/`, `agents/`, and `protocols/` belong to `team-skills`, including `block_dangerous` and the current Claude engineering hooks.
+5. `daily-skills` owns Superpowers, Anthropic, Vercel, `skill-pull`, `mermaid-diagrams`, `prompt-optimizer`, the Obsidian pair, and the four Grill Skills.
+6. `personal-skills` owns architecture-, PRD-, visualization-, and personal-workflow Skills.
+7. Seven rejected external Skills are deleted completely. Grill stays daily. Only the Obsidian pair remains from the previously reviewed group of nine external Skills.
+8. The local cutover installs Base and Daily only. This is an explicit one-time composition choice, not a reusable Profile.
+9. Git is the recovery source. The migration creates no persistent content backup and deletes the legacy backup/state tree after successful verification.
+10. Installers install only their own repository. Missing hard Skill dependencies are reported by exact Skill name and owner; installers do not clone or install sibling repositories.
 
 ## Acceptance Scope
 
-The change is accepted only when all of the following are true:
+The split is accepted only when all of the following are directly proven:
 
-1. Four repository boundaries exist: base configuration, daily Skills, team Skills, and personal Skills.
-2. The current repository remains the team repository and retains its Git history.
-3. The three new repositories start from cutover snapshots with provenance, without copying the current repository's full object history.
-4. Every current managed resource has exactly one destination repository or an explicit delete decision.
-5. `hooks/`, `agents/`, `protocols/`, standard-chain runtime files, and standard-chain contracts remain team-only.
-6. Base and daily repositories remain free of team and personal resources.
-7. The local runtime installs only base and daily repositories after migration.
-8. Plugin-owned and user-owned resources remain untouched.
-9. The seven rejected external Skills and all of their source-lock and runtime traces are removed.
-10. Persistent installer state contains only ownership and integrity metadata, never copies of installed content.
+1. Every current source resource is mapped to exactly one repository, explicit deletion, or explicit out-of-scope preservation.
+2. Base contains only assistant/rules/reference payload plus its own minimal install, test, release, and provenance files.
+3. Daily and Personal contain Skills and their source-maintenance assets, but no hooks, agents, protocols, standard-chain runtime, or copied common installer library.
+4. Team contains every standard-chain hook, agent, protocol, runtime catalog, team Skill, contract, validator, and team-only test it needs.
+5. The three Skill inventories are disjoint. `lib/` and `*-workspace/` directories are not misclassified as installable Skills.
+6. Every declared hard dependency has a source anchor. Every cross-repository reference that is not a hard dependency is explicitly classified as optional, test-only, or documentation-only.
+7. Each repository can install, upgrade, dry-run, and uninstall only its own resources without a central orchestrator. A dependent installer checks preconditions but never mutates the dependency owner.
+8. The one-time migration removes all legacy org-managed runtime resources before freshly installing Base and Daily; it does not adopt old files in place.
+9. Plugin- and user-owned resources are byte-for-byte preserved.
+10. The old `~/.org-skills-state` tree, including its content backups and archives, is absent after success.
+11. New persistent installer state contains ownership and integrity metadata only, never copies of installed content.
+12. Local Claude and Codex contain Base and Daily resources only, plus preserved external/plugin resources; Team, Personal, rejected, stale, and retired org-managed resources are absent.
+13. Generated workspaces, review diffs, local result cards, stale planning ledgers, and unreferenced raw evaluation output are not copied into new repositories or retained as active Team source.
 
-## Observed Starting Facts
+## Evidence From the Current Repository and Runtime
 
-- The Git worktree is clean at commit `20dbfa45`.
-- Both managed runtime targets report `1.2.4-20dbfa45-dirty-f57e224e`; the installed state is therefore not reproducible from the clean commit alone.
-- The managed runtime contains `grill-me`, `grilling`, `grill-with-docs`, and `domain-modeling`, while the current repository does not contain their sources.
-- The old installer writes Codex `[agents.*]` sections and `multi_agent = true`, but its uninstall path does not remove those structured settings.
-- The old uninstall path restores whole-file Claude settings and Codex hooks baselines. Those baselines predate the current files and can erase unrelated changes.
-- The old uninstall path restores content backups and can resurrect resources that the migration intends to remove.
-- Current tools, tests, installers, and contracts contain broad `shared/`, `community/`, and `tools/community/` path coupling. The split is a contract and tool separation, not a directory-only move.
+Observed on 2026-08-31 from source baseline `b00f1ff6` and the installed Claude/Codex runtimes:
 
-These facts make the existing `install.sh --uninstall` unsuitable for this cutover.
+- The installed version fingerprint is `1.2.4-20dbfa45-dirty-f57e224e`; current runtime bytes therefore cannot be assumed to equal a clean Git commit.
+- Legacy installed manifests are path lists. They prove that the old installer claimed paths, but do not prove that current content still equals installed content.
+- The legacy uninstaller restores whole-file Claude settings and Codex hook baselines, can resurrect backup content, and does not reliably remove structured Codex Agent configuration. It is unsafe for this cutover.
+- `~/.org-skills-state/archive/` currently contains a `dot-claude-git.tar.gz` backup and related retirement records. Keeping or moving that archive would violate the no-local-backup decision.
+- Codex configuration contains `[features] multi_agent = true` and five team Agent sections. The actual key identity is `features.multi_agent`, not a top-level `multi_agent` key.
+- `features.hooks` cannot be blindly restored to its old false state because surviving Superset/user hook entries still need hooks enabled.
+- External resources currently include Claude `learned/`, Claude plugin root `superset/`, Codex `superset-*`, and Superset/worktree/read-pages hook files and entries. They are not owned by this repository.
+- Grill Skills exist in both runtimes but are absent from Git. Their upstream bodies match `mattpocock/skills@bb1c760d559872044e76d18216c87165fa69908a` apart from declared runtime-surface fields.
+- Obsidian Skills exist in Codex but are absent from Git. The selected upstream ref is `kepano/obsidian-skills@a1dc48e68138490d522c04cbf5822214c6eb1202`.
+- `shared/skills/lib/` has no `SKILL.md` and is a team library. `shared/skills/qft-branch-flow-workspace/` is an evaluation workspace and must never be installed as a Skill.
+- `contracts/skill-runtime-surface.json` contains stale `qft-branch-management`; no corresponding source or runtime Skill exists.
+- `claude/skills/code-review-fix` and `doc-review-fix` are team-only Claude Skills and were missing from the first inventory draft.
+- Source inspection proves three current hard Skill edges:
+  - `grill-me` calls `grilling`;
+  - `grill-with-docs` calls `grilling` and `domain-modeling`;
+  - team `fix` requires daily `systematic-debugging` before diagnosis or code changes.
+- Team `qa` mentions `webapp-testing`, but also accepts Playwright or an equivalent project browser tool. That is an optional integration, not a hard dependency.
+- Other hits such as `brainstorming` in evaluation evidence are test/document references, not runtime dependencies.
+- Team runtime content has a real Base dependency: Team Skills directly read six Base paths (`rules/code-changes.md`, `rules/completion-claims.md`, `reference/code-structure-reuse.md`, `reference/impact-analysis.md`, `reference/技术方案设计.md`, and `reference/测试规范.md`), while `claude/hooks/post_compact.sh` instructs the runtime to reload all Claude rules after compaction.
+- Root `AGENTS.md`, `README.md`, install tests, rule-runtime evaluators, fixtures, and probes still reference `shared/assistant.md`, `shared/rules/`, or `shared/reference/`. Moving only the payload would leave broken source paths; these consumers must move or be rewritten with their owner.
+- Although `.gitignore` already ignores `.superpowers/`, 185 files remain tracked there and occupy about 42 MB in the working tree. They are generated brainstorm/SDD workspaces and review packages, not canonical source.
+- `tools/eval/results/` contains about 3,142 files and 36 MB. Some summaries are active test fixtures, so blanket deletion is unsafe; unreferenced raw output must be pruned while referenced baselines move with their capability owner.
+- Tracked `.claude/skills/darwin-skill/` cards/results are generated Personal-Skill output, not the canonical Darwin source under `community/alchaincyf/`. `.claude/settings.local.json` also contains a hard-coded permission for the old repository path.
 
-## Repository Model
+## Repository Boundaries
 
-Logical repository IDs are stable installer identities and do not depend on Git remote names.
-
-| Logical repository ID | Role | Local installation after cutover | History policy |
+| Logical repository | Purpose | Installed locally after cutover | History policy |
 |---|---|---:|---|
-| `base-config` | Runtime entry, rules, and references | Yes | Snapshot repository with provenance |
-| `daily-skills` | General daily Skills and external source management | Yes | Snapshot repository with provenance |
-| `team-skills` | Standard-chain and team delivery capabilities | No | Current repository with full history |
-| `personal-skills` | Architecture, PRD, visualization, and personal workflow Skills | No | Snapshot repository with provenance |
+| `base-config` | Global assistant entry, rules, references | Yes | New snapshot repository with provenance |
+| `daily-skills` | General daily Skills and external Skill maintenance | Yes | New snapshot repository with provenance |
+| `team-skills` | Standard-chain and team delivery capabilities | No | Current repository, full history retained |
+| `personal-skills` | Architecture, PRD, visualization, personal workflow | No | New snapshot repository with provenance |
 
-Remote names and visibility do not participate in runtime identity. Repository publication must preserve these four logical IDs even if remote names differ.
+Logical IDs are installer identities. Physical remote URLs do not change runtime ownership. Before implementation creates or pushes the three new repositories, the user must provide or approve their remote URLs; local runtime mutation is blocked until all required commits and tags are pushed.
 
 ### Base Configuration Repository
 
-The base repository owns configuration required before any Skill repository is installed:
-
-- `assistant.md`, rendered to the Claude and Codex global runtime entry files;
-- `rules/`;
-- `reference/`;
-- a base-only installer, uninstaller, contracts, and tests;
-- a machine-readable compatibility marker consumed by Skill repositories.
-
-The initial base payload is exactly:
+Initial payload:
 
 ```text
 assistant.md
@@ -80,41 +118,28 @@ reference/技术方案设计.md
 reference/测试规范.md
 ```
 
-It must not contain Skills, hooks, agents, protocols, standard-chain runtime catalogs, external source locks, or source-sync tools.
+These files are copied from current `shared/assistant.md`, `shared/rules/`, and `shared/reference/`.
 
-Canonical source layout:
+Repository support files are limited to what Base itself needs:
 
 ```text
-assistant.md
-rules/
-reference/
-contracts/
-tools/installer/
-tests/
 install.sh
+tools/install/
+tests/
 VERSION
+README.md
+AGENTS.md
+CLAUDE.md
+PROVENANCE.md
 ```
+
+Base does not provide a shared installer implementation or generic compatibility protocol. Installing Base is not a precondition for Daily or Personal; Team checks Base only because Team source contains the concrete dependency documented below.
+
+Runtime destinations remain the current global entry/rule/reference locations for the selected Claude or Codex target.
 
 ### Daily Skill Repository
 
-The daily repository owns general-purpose Skills used in normal sessions. It contains no standard-chain runtime machinery.
-
-Daily inventory:
-
-- all locked Anthropic Skills;
-- all locked Superpowers Skills;
-- Vercel `agent-browser` and `find-skills`;
-- first-party `skill-pull`;
-- `mermaid-diagrams`;
-- `prompt-optimizer`;
-- `obsidian-cli`;
-- `obsidian-markdown`;
-- `grill-me`;
-- `grilling`;
-- `grill-with-docs`;
-- `domain-modeling`.
-
-The exact initial Skill names are:
+Initial installable Skill inventory:
 
 ```text
 agent-browser
@@ -161,48 +186,70 @@ writing-skills
 xlsx
 ```
 
-The four Grill Skills are one dependency unit. `grill-with-docs` must never be installed without `domain-modeling`.
+Source ownership:
 
-To separate migration from upstream upgrade, the Grill unit initially locks `https://github.com/mattpocock/skills` at `bb1c760d559872044e76d18216c87165fa69908a`, the exact upstream commit matching the four currently installed Skill bodies. The Obsidian unit initially locks `https://github.com/kepano/obsidian-skills` at `a1dc48e68138490d522c04cbf5822214c6eb1202`. Existing Anthropic, Superpowers, Vercel, prompt-optimizer, and mermaid-diagrams refs are copied unchanged from the current source lock at extraction time.
+- locked Anthropic Skills;
+- locked Superpowers Skills, kept as a pure upstream mirror;
+- Vercel `agent-browser` and `find-skills`;
+- first-party `skill-pull`;
+- `mermaid-diagrams`;
+- `prompt-optimizer`;
+- `obsidian-cli` and `obsidian-markdown`;
+- `grill-me`, `grilling`, `grill-with-docs`, and `domain-modeling`.
 
-Canonical source layout:
+Grill initially locks `mattpocock/skills@bb1c760d559872044e76d18216c87165fa69908a`. Obsidian initially locks `kepano/obsidian-skills@a1dc48e68138490d522c04cbf5822214c6eb1202`. Existing Anthropic, Superpowers, Vercel, Mermaid, and prompt-optimizer refs are copied unchanged from the current source lock.
+
+The installer target controls where supported Skills are installed. Obsidian is not frozen as Codex-only merely because the current local copy happens to exist only in Codex. The local `--target all` cutover installs the Daily inventory to both Claude and Codex unless a Skill's own source/surface contract explicitly forbids a target.
+
+Daily contains no hooks. Current `claude/hooks/*` files do not move here.
+
+Recommended source layout:
 
 ```text
 first-party/skills/skill-pull/
 vendor/anthropic/
 vendor/superpowers/
 vendor/vercel/
-vendor/awesome-copilot/
-vendor/softaworks/
+vendor/awesome-copilot/prompt-optimizer/
+vendor/softaworks/mermaid-diagrams/
 vendor/obsidian/
 vendor/mattpocock/
 adapters/codex/
 sources/SOURCES.yaml
-contracts/
-tools/
+contracts/dependencies.yaml
+contracts/skill-runtime-surface.json
+contracts/superpowers-boundary.yaml
+tools/source-sync/
+tools/install/
 tests/
 install.sh
 VERSION
+README.md
+AGENTS.md
+CLAUDE.md
+PROVENANCE.md
 ```
 
-Vendor directories remain source-pure. Runtime frontmatter, visibility policy, and Codex adapters live outside vendor trees and are applied by the installer from an explicit runtime-surface contract.
+Vendor directories remain source-pure. Runtime visibility/frontmatter and Codex adapters live outside vendor trees.
 
 ### Team Skill Repository
 
-The current `org-claude-skills` repository becomes `team-skills` without rewriting its Git history.
+The current repository becomes `team-skills` without history rewriting.
 
 It owns:
 
-- every current `shared/skills/*` Skill except `skill-pull`;
-- all `shared/agents/` content;
-- all `shared/hooks/` content;
-- all `shared/protocols/` content;
-- all `shared/runtime/` standard-chain catalogs and profiles;
-- standard-chain contracts, canonical schemas, tools, tests, fixtures, and active documentation;
-- team-only Claude and Codex adapters;
-- a team-only installer and uninstaller.
+- all current `shared/skills/*` except `skill-pull`;
+- `shared/skills/lib/` as a non-installable library;
+- `shared/skills/qft-branch-flow-workspace/` as a non-installable evaluation workspace;
+- `claude/skills/code-review-fix` and `claude/skills/doc-review-fix`;
+- every current `shared/hooks/` and `claude/hooks/` resource;
+- `shared/agents/`;
+- `shared/protocols/`;
+- `shared/runtime/`;
+- standard-chain contracts, canonical schemas, validators, tools, tests, fixtures, docs, and examples;
+- the team installer and its structured configuration logic.
 
-The exact first-party Skill inventory is:
+First-party installable Skills:
 
 ```text
 cli-updater
@@ -216,7 +263,6 @@ developer
 feishu-docs
 fix
 github-repo-radar
-lib
 overview
 product-director
 product-manager
@@ -224,7 +270,6 @@ project-memory
 prompt
 qa
 qft-branch-flow
-qft-branch-flow-workspace
 qft-group-chat-export
 refactor
 research
@@ -240,15 +285,21 @@ verify
 worktree
 ```
 
-The team repository depends on an installed compatible `base-config`; it must not carry copies of `assistant.md`, base rules, or base references.
+Claude-only installable Skills:
 
-The team repository may retain the current `shared/` naming for standard-chain assets because those paths are deeply embedded in current contracts. Removing the base and daily/personal assets is required; renaming all team paths is not.
+```text
+code-review-fix
+doc-review-fix
+```
+
+Team installs its own standard-chain hooks, agents, protocols, and runtime data. It does not copy Base configuration, but it requires Base on the same runtime target because Team Skills and `post_compact` consume Base rules/references. Team's other current cross-repository hard dependency is `fix -> daily-skills/systematic-debugging`.
 
 ### Personal Skill Repository
 
-The personal repository owns the following locked external Skills:
+Initial installable Skill inventory:
 
 ```text
+agent-reach
 architecture
 baoyu-markdown-to-html
 bb-browser
@@ -262,14 +313,15 @@ prd
 self-improving-agent
 to-prd
 ui-ux-pro-max
-agent-reach
 ```
 
-It has its own source lock, adapters, runtime-surface contract, installer, and tests. It does not contain `mermaid-diagrams` or `prompt-optimizer`; those are daily Skills.
+Personal owns its own vendor trees, source lock, Codex adapters, `contracts/dependencies.yaml`, runtime-surface policy, source-specific update adapters, installer, and tests. It contains no hooks, agents, protocols, or standard-chain runtime.
+
+It is extracted and verified but is not installed on this machine during the cutover.
 
 ### Explicit Deletions
 
-The following external Skills are removed from source locks, repository content, Claude runtime, Codex runtime, migration allowlists, and generated manifests:
+The following seven rejected external Skills must be absent from every new source lock, repository, runtime-surface contract, installer manifest, Claude runtime, and Codex runtime:
 
 ```text
 architecture-blueprint-generator
@@ -281,254 +333,400 @@ tailored-resume-generator
 tech-resume-optimizer
 ```
 
-No tombstone copy or content backup is retained. Recovery, if ever required, uses the pre-split Git tag and upstream provenance.
-
-## Cross-Repository Contracts
-
-Each Skill repository declares a base compatibility contract with:
-
-- `schema_version`;
-- required logical repository ID `base-config`;
-- supported base contract-version range;
-- installer protocol version;
-- target runtime surfaces: Claude, Codex, or both.
-
-Installation stops before mutation when the base marker is missing or incompatible. No Skill repository reads files from a sibling checkout at runtime.
-
-Each repository owns its own source lock and update cadence. When two repositories consume the same upstream repository, each locks the exact subtree and commit independently. An updater may mutate only the repository whose source lock it reads.
-
-## Installer Ownership Protocol
-
-All four installers implement protocol version 1 and use the same neutral state root:
+Also remove stale or retired org-managed runtime traces:
 
 ```text
-${XDG_STATE_HOME:-$HOME/.local/state}/agent-repo-installer/v1/
+qft-branch-management
+review-fix-loop
+codex-doc-review
+_retired-qft-chat-analysis-user-copy
+qft-chat-analysis
+qft-chat-analysis-workspace
 ```
 
-Per-repository state lives under:
+No tombstone or local content copy is retained. Historical recovery uses Git history or the recorded upstream source.
+
+## Ownership Denominator
+
+Every current top-level source group has one terminal decision:
+
+| Current source atom | Target action | Owner / reason |
+|---|---|---|
+| `shared/assistant.md` | MOVE | Base |
+| `shared/rules/` | MOVE | Base |
+| `shared/reference/` | MOVE | Base |
+| active tests, fixtures, probes, and evaluator code whose primary subject is assistant/rules/reference behavior | MOVE/SPLIT | Base owns Base behavior; Team keeps only tests of Team consumption |
+| root `AGENTS.md`, `README.md`, and other active refs to moved `shared/*` paths | REWRITE | Team must not retain dead source-path references |
+| `shared/skills/skill-pull/` | MOVE | Daily |
+| `community/anthropic/` | MOVE/RELAYOUT | Daily |
+| `community/superpowers/` | MOVE/RELAYOUT | Daily |
+| `community/vercel/` | MOVE/RELAYOUT | Daily |
+| `community/open-skills/.../mermaid-diagrams` | MOVE/RELAYOUT | Daily |
+| `community/open-skills/.../prompt-optimizer` | MOVE/RELAYOUT | Daily |
+| Grill and Obsidian locked upstream subtrees | FETCH | Daily; absent from current Git |
+| `contracts/superpowers-boundary.yaml` and its active validators/tests | MOVE/REWRITE | Daily owns Superpowers mirror purity |
+| remaining current `community/*` Skill sources and adapters | MOVE/RELAYOUT | Personal, as listed in its inventory |
+| `community/SOURCES.yaml` | SPLIT | Daily and Personal keep only their own sources |
+| `shared/skills/*` except `skill-pull` | KEEP | Team; `lib` and workspace stay non-installable |
+| `claude/skills/code-review-fix`, `doc-review-fix` | KEEP | Team, Claude-only |
+| all `shared/hooks/` and `claude/hooks/` | KEEP | Team |
+| `shared/agents/`, `shared/protocols/`, `shared/runtime/` | KEEP | Team |
+| standard-chain/canonical contracts, tools, tests, fixtures, docs, examples | KEEP | Team |
+| mixed runtime-surface and source-lock contracts | SPLIT | Each Skill repo gets only its own keys; Team keeps team keys |
+| tracked `.superpowers/` workspaces, review diffs, and stale PID files | DELETE FROM ACTIVE HEAD | Generated artifacts already ignored; Git history is recovery |
+| tracked `.claude/skills/darwin-skill/` result cards/TSV | DELETE FROM ACTIVE HEAD | Generated output, not Personal source truth |
+| `.claude/settings.local.json` hard-coded old-path permission | DELETE/RECREATE ONLY IF NEEDED | The referenced Base paths leave Team |
+| `.github/workflows/` | SPLIT/REWRITE | Team keeps Team gates; each new repo creates only its own minimal workflow |
+| root `.gitignore`, `.gitleaks.toml`, `AGENTS.md`, `CLAUDE.md`, `README.md`, `CHANGELOG.md`, `VERSION`, installers | KEEP/REWRITE | Team keeps its lineage; new repos create fresh owner-specific files rather than copy mixed roots |
+| root `findings.md`, `progress.md`, `task_plan.md` | DELETE AFTER INBOUND-REF CHECK | Stale planning ledgers; do not copy to any snapshot repo |
+| `tools/eval/results/` | KEEP/MOVE/PRUNE BY INBOUND REF | Retain only active test baselines; move Base-owned evidence; drop unreferenced raw output from active HEAD |
+| seven rejected Skills and stale/retired traces | DELETE | Explicit user decision or no live source |
+| `claude-code-engineering/`, absent `qft-cc-core/` | KEEP OUT OF SCOPE | Ignored nested checkouts, not managed split payload |
+
+Implementation must generate a machine-readable inventory from actual source roots and fail if any current Skill root, source-lock entry, runtime-surface key, hook, agent, protocol, or installer destination is unmapped or mapped more than once. The table is the design denominator; the generated inventory is verification evidence, not a second source of truth.
+
+Active-tree cleanup is conservative: a tracked result or report with an active test/contract inbound reference stays or moves with its owner; an unreferenced generated artifact is deleted from active HEAD. Nothing is copied into a backup directory because its prior bytes remain in Git history.
+
+Historical designs and result summaries may retain old monolith paths as dated provenance when they are not active handoff inputs. Active instructions, contracts, tests, fixtures, workflows, and README links must resolve in their new owner repository; history is not an excuse for a broken active reference.
+
+## Dependency Model: Evidence, Then On-Demand Acquisition
+
+There is one proven repository-level dependency, four proven runtime Skill edges, and one maintenance-only edge. They are declared next to the caller in `contracts/dependencies.yaml`:
+
+| Caller | Scope | Required unit | Owner | Evidence |
+|---|---|---|---|---|
+| `team-skills` | runtime install | Base installed on the same target | Base | Team consumes six named Base rule/reference paths; `post_compact` consumes the Base rules directory |
+| `daily/grill-me` | runtime invocation | `grilling` | Daily | `grill-me/SKILL.md` calls the Skill tool with `grilling` |
+| `daily/grill-with-docs` | runtime invocation | `grilling` | Daily | `grill-with-docs/SKILL.md` calls it |
+| `daily/grill-with-docs` | runtime invocation | `domain-modeling` | Daily | `grill-with-docs/SKILL.md` calls it |
+| `team/fix` | runtime invocation | `systematic-debugging` | Daily | `fix/SKILL.md` marks it REQUIRED and sole owner of diagnosis |
+| Personal source update | maintenance only | `skill-pull` | Daily | Personal owns external source locks but the user assigned the generic updater to Daily |
+
+Rules:
+
+1. A repository installer installs only that repository's payload for the selected target.
+2. Base, Daily, and Personal have no repository prerequisite.
+3. Team requires Base on the same target. It checks Base's installed manifest and the required resource paths; it does not install or update Base.
+4. Internal dependencies must be present in the same install plan; the default full-repository Daily install satisfies the Grill edges.
+5. A missing cross-repository Skill prerequisite stops that capability when it is checked or invoked; it does not block installation of unrelated Team capabilities. The error names the exact owner and Skill path and never triggers an implicit clone or whole-Daily installation.
+6. The user or LLM may acquire that exact Skill using the runtime's existing Skill installation mechanism, then rerun the check. This design does not build a dependency resolver.
+7. Optional/tool-substitutable references do not enter the hard dependency contract.
+8. Upstream Superpowers dependency instructions remain upstream truth; this repository does not duplicate them into a second graph.
+9. Install-time tools are checked by the owning installer. Skill-specific executables, authentication, and services such as Obsidian CLI, browser state, Bun/npm, or NotebookLM are acquired only when that Skill is invoked; they are not preinstalled merely because the repository is installed.
+10. Personal installation does not require Daily. Only a Personal source-update run requires `skill-pull`, which is acquired on demand like any other maintenance Skill.
+11. CI validates repo-local behavior and only the real dependency edges owned by that repository. There is no permanent all-combinations composition matrix.
+
+This model admits the necessary `Team -> Base` relationship and the actual `fix -> systematic-debugging` edge without turning Team into a dependency on all 42 Daily Skills.
+
+## `skill-pull` Ownership and Source Updates
+
+`skill-pull` moves to Daily and becomes checkout-scoped:
+
+1. It runs in the repository the user wants to update.
+2. It reads only that checkout's `sources/SOURCES.yaml` and declared source-specific adapters.
+3. It changes only paths owned by those source entries.
+4. It verifies locked ref, subtree fidelity, license/provenance metadata, adapters, surfaces, and the target repository's tests.
+5. It shows the diff and validation result. Commit and push remain explicit user actions.
+
+The generic orchestration code stays inside the Daily `skill-pull` Skill. Daily- and Personal-specific extraction adapters stay in their respective repositories. No generic source-sync library is vendored between repositories, Team has no external Skill source lock after contraction, and Base has no source lock.
+
+## Minimal Installer Contract
+
+Each repository owns its installer implementation. There is no canonical installer library in Base and no runtime import from sibling checkouts.
+
+All installers follow the same small behavioral contract because they share runtime directories:
+
+```text
+install.sh [--target claude|codex|all] [--dry-run] [--uninstall]
+```
+
+### Resource Ownership State
+
+Persistent state root:
+
+```text
+${SKILL_REPO_STATE_ROOT:-${XDG_STATE_HOME:-$HOME/.local/state}/skill-repos}
+```
+
+Per target:
 
 ```text
 <state-root>/<repo-id>/<target>/installed.json
 ```
 
-`installed.json` records only:
+The manifest records metadata only:
 
-- protocol version;
-- repository ID and version;
-- target runtime;
-- installation timestamp;
-- installed path, resource kind, and SHA-256 digest;
-- structured-patch selector and installed digest;
-- whether a scalar setting or structured entry was created by this installer.
+```json
+{
+  "schema_version": 1,
+  "repo_id": "base-config|daily-skills|team-skills|personal-skills",
+  "repo_version": "<VERSION>",
+  "target": "claude|codex",
+  "requires": [
+    {
+      "repo_id": "<required repo id>",
+      "target": "same",
+      "resource_ids": ["<required resource id>"]
+    }
+  ],
+  "resources": [
+    {
+      "resource_id": "<stable repo-local id>",
+      "resource_root": "<absolute file or directory>",
+      "kind": "file|tree|symlink",
+      "tree_sha256": "<canonical digest>",
+      "files": [
+        {
+          "path": "<relative path>",
+          "kind": "file|symlink",
+          "mode": "0644|0755",
+          "sha256": "<hex>",
+          "link_target": "<symlink only>"
+        }
+      ]
+    }
+  ],
+  "structured_entries": []
+}
+```
 
-It does not store copies of installed files or directories.
+`resource_root`, desired file set, and tree digest are mandatory. A path-only manifest is forbidden because it cannot detect stale files left inside a Skill directory after upgrade. Tree digests use sorted relative paths plus kind, executable mode, content digest, and symlink target; timestamps and host ownership are excluded. Absolute paths, `..` traversal, and symlinks escaping the resource root are rejected.
 
-### Collision Rules
+Only repository-level install prerequisites enter `requires`; initially that is Team→Base. Invocation-time Skill prerequisites and Personal's maintenance-only `skill-pull` edge stay in `contracts/dependencies.yaml` and do not turn the whole repository into an installed dependent.
 
-Before mutation, an installer obtains a state-root-wide lock, loads every repository manifest, and evaluates all target paths.
+### Install, Upgrade, and Uninstall Rules
 
-- A path owned by another repository is a hard conflict.
-- An unowned existing path is a hard conflict, even when content is identical.
-- Migration may explicitly adopt an identical old-managed path into a new owner.
-- A reinstall is allowed only when the current digest matches the calling repository's installed digest.
-- An uninstall removes a path only when its current digest matches the installed digest.
-- Missing or drifted owned paths stop the operation and produce an actionable report.
-- `--force` may not bypass ownership or drift checks. Intentional deletion requires a separately declared migration decision.
+1. Acquire the common state lock before reading or mutating runtime ownership.
+2. Render/stage the complete selected target plan in a bounded temporary directory.
+3. Validate all target paths and structured entries before the first mutation.
+4. Validate declared dependencies before the first mutation. Team reads Base's metadata manifest and required installed paths; it does not import Base installer code.
+5. A new destination must be absent. Existing content without this repo's matching manifest is a conflict even when bytes happen to match.
+6. Upgrade is allowed only when every currently owned resource matches its recorded digest. It reconciles the complete desired file set, including removal of files no longer present.
+7. Drift stops upgrade or uninstall. The installer reports the resource and expected/actual digest; it does not overwrite or delete modified content.
+8. Uninstall removes only resources whose current digest matches the manifest and only structured entries whose exact identity/value still matches.
+9. Before uninstalling or removing required resource IDs, scan the metadata manifests for reverse repository dependencies. Base uninstall or an incompatible Base resource removal stops while Team is installed on that target and names the dependent; Team must be removed first.
+10. Shared parent directories are containers, not owned resources. Base records each assistant/rule/reference file; Skill repositories record each Skill tree; Team records each hook/agent/protocol resource at its real ownership root.
+11. Installers never own an entire shared settings/config file and never restore a whole-file baseline.
+12. `--target all` validates both targets first, then records the outcome of each target. If an external concurrent write causes one target to stop, the command reports visible partial success and a safe rerun path; it never claims all-target success.
+13. Temporary staging and an in-progress metadata journal may exist only during the operation. Both are cleaned after success. They contain no backup copy outside the bounded staging tree and are not retained as recovery artifacts.
 
-### Structured Configuration Rules
+Team alone needs structured configuration handling for hook identities and Codex Agent sections. Base, Daily, and Personal do not inherit that machinery merely for uniformity.
 
-Claude settings, Codex config, and Codex hooks are shared structured files; no installer owns the whole file.
+## One-Time Clean Migration
 
-- JSON hooks are inserted and removed by exact normalized entry identity.
-- TOML agent sections are inserted and removed by exact section identity and digest.
-- An absent Boolean feature may be inserted as `true` and recorded as created.
-- A pre-existing matching Boolean remains user-owned and is not removed later.
-- A pre-existing conflicting Boolean stops installation instead of being overwritten.
-- If a managed entry changes after installation, uninstall leaves it untouched and reports drift.
-- Whole-file baselines are forbidden.
+The cutover uses a one-time cleaner from a pinned Team commit. It is not a fifth installer and does not become a permanent orchestration layer.
 
-This prevents team uninstall from erasing unrelated settings and prevents dangling Agent sections after Agent files are removed.
+The cleaner receives explicit paths to the prepared Base and Daily checkouts. It never calls the legacy uninstaller.
 
-### Transaction Rules
+### Phase 1: Preflight and Drift Audit
 
-Installers validate the complete plan before writing. They may use one bounded `mktemp -d` transaction directory for rendered output and atomic file replacement. The transaction directory is removed on success or failure and is never registered as a backup location.
+Build one action plan covering every legacy manifest path, known old resource root, structured configuration entry, external preserved path, and old state file.
 
-Persistent content backup directories are forbidden. Git commits, tags, source locks, and provenance records are the recovery source.
+Classifications:
 
-## `skill-pull` Redesign
+```text
+REMOVE_FOR_FRESH_INSTALL
+REMOVE_OLD_ONLY
+REMOVE_EXPLICIT_DELETE
+PRESERVE_EXTERNAL
+DELETE_LEGACY_STATE
+CONFLICT
+```
 
-`skill-pull` moves to `daily-skills` as a generic source-sync engine. It no longer knows the old monorepo layout and does not own another repository's content.
+Requirements:
 
-Its contract is:
+- Render the expected old runtime from the exact pre-split Git tag and compare current old-managed resources by resource root/tree digest.
+- The dirty installed fingerprint is not an exception. Every diff must be explained by a declared runtime overlay, an approved deletion, or an explicit preserved external owner.
+- Unexplained drift is `CONFLICT` and stops before mutation. The user may commit/recover the content or explicitly authorize discard; the cleaner does not decide.
+- Legacy path manifests are ownership clues, not content proof.
+- The prepared Base and Daily commits, source locks, provenance, and pre-split recovery tag must exist and be pushed.
+- Daily vendor trees must match their locked upstream refs, allowing only declared runtime-surface differences in installed copies.
+- Any unexpected file inside `~/.org-skills-state` stops preflight. Known manifests, baselines, backups, and the current `archive/dot-claude-retirement-*` tree are classified `DELETE_LEGACY_STATE`; they are not moved elsewhere.
+- Existing runtime resources outside legacy manifests default to `PRESERVE_EXTERNAL`. The only exceptions are the user-approved deletion list and the Grill/Obsidian destinations selected for remove-then-fresh-install. An unowned path that collides with any other planned destination is `CONFLICT`.
 
-1. Run from a target repository checkout.
-2. Read that repository's `sources/SOURCES.yaml` and runtime-surface contract.
-3. Update only paths declared by that source lock.
-4. Validate vendor fidelity, license metadata, adapters, and target repository tests.
-5. Show the diff and validation result.
-6. Commit or push only when explicitly requested; never assume `main` or a remote.
+`PRESERVE_EXTERNAL` includes at least:
 
-The daily repository invokes it for daily sources. Team and personal repositories may install the daily `skill-pull` Skill, but each update run remains scoped to the checkout from which it is invoked. Base configuration has no external source lock and rejects `skill-pull` updates.
+```text
+~/.claude/skills/learned/
+~/.claude/skills/superset/
+~/.agents/skills/superset-*
+~/.claude/hooks/superset_notify.sh
+~/.claude/hooks/read_pages_context.py
+~/.claude/hooks/worktree_create.sh
+~/.claude/hooks/worktree_remove.sh
+```
 
-## One-Time Migration Cleaner
+The exact matching Claude settings and Codex `hooks.json` entries, including `SUPERSET_HOME_DIR` notify commands, are preserved. `external-runtime-skills/*.txt` is not trusted as a preserve list.
 
-The migration cleaner is a one-time repository tool, not a fifth installer and not a runtime Skill. It is implemented and verified in the team repository after the pre-split source tag. Its verified commit receives a separate migration-tool tag; after successful cutover it is removed from the active team HEAD while remaining recoverable from that tag.
+### Phase 2: Remove the Old Installation
 
-It accepts explicit paths to the prepared base and daily repositories and performs five phases.
+Immediately before each mutation, compare the current digest with the preflight action. A changed path stops that action and leaves the failure visible.
 
-### Phase 1: Preflight Inventory
+Remove:
 
-Classify every affected path as one of:
+- all old org-managed Base/Daily/Team/Personal Skill and configuration resources (`REMOVE_FOR_FRESH_INSTALL` for Base/Daily destinations, `REMOVE_OLD_ONLY` for Team/Personal);
+- the currently installed Grill and Obsidian trees after their source/digest checks, so their new Daily manifests start from a fresh write;
+- all current repository-managed hooks, agents, protocols, runtime catalogs, and team Agent files;
+- all `REMOVE_EXPLICIT_DELETE` rejected, stale, and retired runtime resources;
+- exact old-managed hook entries and the five team Codex Agent sections when their current values match the old installer output.
 
-- `REOWN_BASE`;
-- `REOWN_DAILY`;
-- `REMOVE_TEAM`;
-- `REMOVE_PERSONAL`;
-- `REMOVE_REJECTED`;
-- `PRESERVE_EXTERNAL`;
-- `CONFLICT`.
+Structured configuration rules:
 
-The report includes current digest, old ownership evidence, intended owner, and action. Any `CONFLICT` prevents mutation.
+- Never restore `claude-settings-baseline.json` or `codex-hooks-baseline.json`.
+- Remove only exact old-managed JSON hook identities; preserve unrelated entries and ordering/fields as far as the parser permits.
+- Remove the five exact team `[agents.*]` sections when their managed fields match. User-added or changed fields are drift and stop that section's removal.
+- Treat `features.multi_agent` as the correct TOML identity. Remove it only when it matches the old emitted value, no non-team Agent section remains, and the action plan attributes it to the old install.
+- Keep `features.hooks = true` when any preserved external hook entry remains. Do not apply the old `had_codex_hooks: false` snapshot over live external hooks.
 
-The preflight must identify and preserve plugin/user-owned resources, including `learned` and `superset-*`. It must remove old team-only QFT runtime residue, including `_retired-qft-chat-analysis-user-copy`, `qft-chat-analysis`, and `qft-chat-analysis-workspace`, because the team repository is not installed after cutover.
+The operation does not adopt matching old content into new manifests. Removal followed by fresh installation is the proof that stale files and old ownership state did not leak across the boundary.
 
-### Phase 2: Reproducibility Gate
+### Phase 3: Fresh Base and Daily Installation
 
-- Verify the pre-split recovery tag resolves.
-- Verify every retained dirty-only resource has been committed to base or daily.
-- Verify the four Grill Skills and two Obsidian Skills have locked sources and runtime-surface entries.
-- Verify no rejected Skill appears in any new source lock or install surface.
-- Verify base and daily tests pass from fresh checkouts.
+After old-managed resources are absent:
 
-Failure stops before local mutation.
+1. Run Base install for Claude and Codex from its pinned checkout.
+2. Run Daily install for Claude and Codex from its pinned checkout.
+3. Verify target manifests and actual resource tree digests.
+4. Verify preserved external/plugin resources against preflight digests.
 
-### Phase 3: Structured Cleanup Plan
+The cleaner keeps only a metadata action journal until final verification. On interruption, rerun compares current state with completed action records and the pinned desired state. It resumes idempotently; it never restores content from a journal or backup.
 
-- Remove exact old managed hook entries from the current Claude settings; never restore the old Claude baseline.
-- Remove exact old managed entries from current Codex hooks; never restore the old Codex baseline.
-- Remove the five exact standard-chain Codex Agent sections.
-- Remove `multi_agent = true` only when the config contains no non-team Agent sections and the five team sections match the old managed contract; otherwise report a conflict.
-- Restore the Codex hooks feature through its recorded feature-state contract when that contract is intact.
-- Leave unrelated JSON and TOML fields unchanged.
+### Phase 4: Retire Legacy State
 
-The resulting structured files are parsed and validated before replacement.
+Only after final runtime verification:
 
-### Phase 4: Apply and Install
+- delete all of `~/.org-skills-state`, including manifests, whole-file baselines, backups, archives, external-runtime lists, and feature-state files;
+- delete the temporary migration journal and staging directory;
+- retain only the new Base and Daily metadata manifests;
+- print a final action/hash report. Persisting that report requires an explicit output path from the user.
 
-1. Stage all base and daily outputs.
-2. Remove old-managed team, personal, rejected, and retired runtime paths whose preflight digests still match.
-3. Apply structured configuration cleanup.
-4. Install `base-config`.
-5. Install `daily-skills`.
-6. Run target-level verification.
-
-If any current digest differs from preflight, stop instead of applying a stale plan.
-
-The cleaner maintains a metadata-only action journal until verification succeeds. The journal records action identity and status, never prior content. A failed run keeps the old installer state and the journal, and a rerun resumes from verified current state. Managed source recovery comes from the pre-split source tag and the prepared base and daily repositories.
-
-### Phase 5: State Retirement
-
-Only after successful verification:
-
-- remove `~/.org-skills-state` manifests, external-runtime lists, baselines, and content backups;
-- retain only the new base and daily ownership manifests;
-- delete the transaction directory;
-- emit a final machine-readable migration report containing actions and hashes, but no copied content.
-
-The ignored nested repository `claude-code-engineering/` is outside migration scope and remains untouched.
+If any verification fails, legacy state and the metadata journal remain temporarily for diagnosis, but no new content backup is created. The supported recovery path is to fix the cause and rerun. Reinstalling the pre-split Git tag is an explicit emergency choice, not an automatic rollback.
 
 ## Git History and Provenance
 
-Before extraction, create an annotated pre-split source tag on the clean source commit. The source tag is the content recovery anchor and must be pushed before destructive local migration. After the migration cleaner is implemented and verified, create and push a second annotated tag for the exact cleaner used during cutover.
+Before any extraction or Team contraction:
+
+1. Commit the final approved split design.
+2. Create and push an annotated pre-split tag on the last monolithic source commit.
+3. Record that tag and commit in every new repository's `PROVENANCE.md`.
 
 History policy:
 
-- `team-skills` keeps the current repository and full history;
-- `base-config`, `daily-skills`, and `personal-skills` start from clean snapshot roots;
-- each new repository records source repository URL, source commit, pre-split tag, extraction date, and resource mapping in `PROVENANCE.md`;
-- no new repository imports the current repository's full object graph;
-- repository deletion from the team HEAD does not claim to shrink historical objects.
+- Team keeps the current repository and full object history.
+- Base, Daily, and Personal begin with snapshot commits; they do not copy the current `.git` object graph.
+- Each new repository records source URL, source commit/tag, extraction date, resource mapping, and third-party locked refs.
+- Extraction first copies and verifies new repositories. Team deletes moved assets only after their destination commits are pushed and independently pass tests.
+- Before local mutation, push cutover commits/tags for all four repositories. A local-only commit is not accepted recovery evidence.
 
-This preserves traceability without multiplying the current `.git` storage across four repositories.
+## Verification Boundaries
 
-## CI and Release Boundaries
+Each repository proves only what it owns:
 
-Each repository has independent quick and full gates, release versioning, and dry-run installation tests.
-
-| Repository | Required independent evidence |
+| Repository | Required evidence |
 |---|---|
-| Base | layout contract; render tests; Claude/Codex install, reinstall, drift, and uninstall tests |
-| Daily | source-lock fidelity; adapter generation; runtime-surface validation; `skill-pull` target isolation; install lifecycle tests |
-| Team | existing standard-chain quick/full gates; base compatibility; absence of base/daily/personal ownership; team install lifecycle tests |
-| Personal | source-lock fidelity; adapter generation; runtime-surface validation; install lifecycle tests |
+| Base | exact payload allowlist; no Skills/hooks/agents/protocols; Claude/Codex install, upgrade, drift, uninstall |
+| Daily | exact Skill inventory; source-lock fidelity; vendor purity; adapter/surface checks; Grill dependency edges; generic `skill-pull` checkout isolation; install lifecycle |
+| Team | exact team inventory; all hooks/agents/protocols retained; Base/Daily/Personal payload absent; library/workspace not installed; real Team→Base and `fix`→`systematic-debugging` dependency checks; structured-config lifecycle; existing standard-chain gates |
+| Personal | exact Skill inventory; source-lock fidelity; adapters/surfaces; no hooks/agents/protocols; install lifecycle in a temporary home |
+| One-time migration | current-runtime dry-run; drift rejection; external preservation; interruption/resume; old-state deletion; fresh Base+Daily end-to-end result |
 
-Cross-repository CI runs three compositions from clean temporary homes:
+There is no permanent cross-repository composition matrix or Team-hosted integration center. Team CI may fetch pinned Base and the exact Daily `systematic-debugging` Skill solely to test Team's two real dependency boundaries. The cutover separately runs a temporary Base+Daily install in an isolated home followed by the real local migration.
 
-1. base plus daily;
-2. base plus team;
-3. base plus personal.
+Tests must include the failure paths that matter:
 
-It also tests install order rejection, idempotent reinstall, cross-owner collision, local drift, structured-config preservation, failed-transaction cleanup, and uninstall isolation.
+- unmapped or duplicate ownership;
+- existing unowned destination;
+- modified owned resource;
+- stale file removed during upgrade;
+- missing hard dependency;
+- malformed or concurrently changed structured config;
+- interruption after partial target application;
+- preserved plugin resource changed or deleted;
+- unknown legacy state file;
+- final old-state or rejected-Skill residue;
+- active test or contract reference pointing at a deleted/moved source or evidence path;
+- tracked transient workspace or unreferenced raw evaluation output surviving Team contraction.
 
-The local cutover acceptance run is base plus daily only. Team and personal composition tests run in isolated temporary homes, not the user's runtime.
+## Cutover Sequence
 
-## Cutover Order
+1. Approve, commit, and push this design; create and push the pre-split tag.
+2. Create Base, Daily, and Personal snapshot repositories with provenance; fetch Grill and Obsidian at their locked refs.
+3. Verify each new repository independently.
+4. Contract the current repository into Team only; repair Team tests and installer around its retained ownership.
+5. Push and tag the four exact cutover commits.
+6. Build and verify the one-time cleaner against captured fixtures and temporary homes.
+7. Run a temporary Base+Daily end-to-end install from the pinned commits.
+8. Run the real cleaner in dry-run mode and review every action/classification.
+9. Apply removal, fresh Base+Daily install, and final verification.
+10. Delete legacy state and temporary migration metadata.
 
-1. Freeze current content and push the pre-split tag.
-2. Create snapshot repositories and provenance records.
-3. Commit retained Grill and Obsidian sources to daily; remove rejected source records.
-4. Implement and verify protocol-v1 scoped installers.
-5. Split tools, contracts, tests, and workflows by capability ownership.
-6. Verify all four repositories independently and in the three supported compositions.
-7. Tag and push the verified migration cleaner.
-8. Run migration-cleaner dry-run and review its action report.
-9. Run the one-time migration.
-10. Verify the local runtime contains only base and daily managed resources plus preserved external resources.
-11. Retire old state and content backups.
-
-The old monolithic uninstaller is never invoked during this sequence.
+The legacy `install.sh --uninstall` path is never invoked.
 
 ## Final Local Acceptance
 
-The cutover passes only when direct evidence shows:
+The local cutover passes only when direct evidence shows:
 
-- Claude and Codex ownership manifests exist only for `base-config` and `daily-skills`;
-- global assistant entry, rules, and references match `base-config` digests;
-- all daily Skills are present and owned by `daily-skills`;
-- all team and personal Skills are absent from the user runtime;
-- the seven rejected Skills are absent from repositories, source locks, generated surfaces, and runtime;
-- standard-chain Agent files, Agent sections, hooks, protocols, runtime state, and QFT residue are absent locally;
-- no managed hook command references a removed file;
-- `learned`, `superset-*`, and any other preflight-classified external resources are unchanged;
-- `~/.org-skills-state` no longer exists;
-- no persistent content-backup directory was created;
-- base plus daily quick and full gates pass against the actual installed runtime;
-- `git diff` in all four repositories matches the approved extraction scope.
+- new installer manifests exist only for `base-config` and `daily-skills`;
+- Base assistant, rules, and references exactly match Base source digests;
+- all Daily Skills, including Grill and Obsidian, match Daily source/rendered digests for the selected targets;
+- every current org-managed hook, agent, protocol, runtime catalog, team Skill, personal Skill, and Claude-only review-fix Skill is absent;
+- the seven rejected Skills and all stale/retired runtime traces are absent;
+- the five team Codex Agent sections are absent and no managed command points to a removed file;
+- surviving `features.multi_agent` or `features.hooks` values, if any, have explicit non-team ownership evidence; otherwise old-managed values are removed;
+- Claude `learned/`, Claude `superset/`, Codex `superset-*`, and preserved external hook files/entries have their preflight digests;
+- `~/.org-skills-state` does not exist;
+- no persistent migration backup, archive copy, or automatic report file was created;
+- Base and Daily quick/full gates pass against isolated installs and the actual local runtime;
+- all four repository worktrees contain only the approved split changes.
+
+## Rejected Alternatives
+
+### Profiles and a Team-hosted composition center
+
+Rejected because install scenarios are user choices, not repository identities. Profiles, a central matrix, and a Team integration center would create a new coordination product that this split does not need.
+
+### Base-owned installer protocol and vendored copies
+
+Rejected because Base is configuration, not infrastructure. Copying one installer library into three repositories creates version coupling and duplicated maintenance while solving no current cross-repository runtime call.
+
+### No dependency declarations
+
+Rejected because Team consumes Base runtime configuration, while `grill-me`, `grill-with-docs`, and Team `fix` contain proven hard calls. Ignoring them would make a clean-looking split with broken runtime behavior. The chosen design records only these evidence-backed edges and uses existing on-demand Skill acquisition.
+
+### In-place adoption of the old runtime
+
+Rejected because legacy manifests are path-only and the installed fingerprint is dirty. Adoption can silently preserve stale or modified bytes. Explicit removal plus fresh install provides a stronger and simpler clean-state proof.
+
+### Persistent local rollback backup
+
+Rejected by user decision. It duplicates Git recovery, accumulates unmaintained archives, consumes local storage, and obscures which copy is authoritative.
 
 ## Non-Goals
 
-- Renaming every surviving `shared/` path in the team repository.
-- Installing team or personal repositories on the user's machine during this cutover.
-- Updating retained third-party sources beyond the content selected for the cutover.
-- Creating a fifth orchestration repository or permanent global compositor.
-- Deleting the ignored `claude-code-engineering/` nested repository.
-- Shrinking the current repository's historical Git pack.
+- A Profile system, dependency resolver, central package registry, fifth repository, or permanent compositor.
+- Automatic network fetch of sibling repositories during install.
+- A shared installer codebase or Base compatibility protocol.
+- Installing Team or Personal on this machine during the cutover.
+- Updating retained third-party Skills beyond the selected locked refs.
+- Renaming every surviving Team `shared/` path.
+- Deleting ignored nested checkouts such as `claude-code-engineering/`.
+- Shrinking the historical Git object pack.
+- Reconstructing the previous runtime automatically after a successful cutover.
 
 ## Implementation Decomposition
 
-This architecture is too broad for one implementation plan. Written-spec approval leads to six ordered plans, each producing an independently reviewable state:
+This specification is intentionally one architectural decision but not one implementation plan. After written-spec approval, create five ordered plans with separate review gates:
 
-1. protocol-v1 ownership library and `base-config` extraction;
-2. `daily-skills` extraction, retained-source capture, and generic `skill-pull`;
-3. `personal-skills` extraction and rejected-source removal;
-4. `team-skills` contraction and standard-chain dependency repair;
-5. one-time migration cleaner and dry-run evidence;
-6. cross-repository integration, local cutover, and state retirement.
+1. **Pre-split inventory and Base extraction** — freeze the machine-readable ownership denominator, push the recovery tag, create Base, move its active evaluators/tests, and prove Base lifecycle behavior.
+2. **Daily extraction** — move/fetch the 42 Daily Skills, source locks, adapters, surfaces, dependencies, and `skill-pull`; prove vendor fidelity and install behavior.
+3. **Personal extraction** — move the 14 Personal Skills and their source-specific maintenance assets; prove no rejected Skill or Team machinery crosses the boundary.
+4. **Team contraction and active-tree cleanup** — remove already-pushed Base/Daily/Personal sources, rewrite active refs/tests/workflows, retain all standard-chain machinery, and prune only unreferenced generated artifacts.
+5. **Cleaner and local cutover** — prove migration fixtures and interruption handling, run isolated Base+Daily E2E, review the real dry-run, remove the old installation, fresh-install Base+Daily, and retire legacy state.
 
-Plans 2 through 4 depend on the protocol and base compatibility marker from plan 1. Plan 5 depends on verified base and daily repositories. Plan 6 depends on all repository gates and the tagged migration cleaner.
+Plans 1–3 copy and verify destinations before Plan 4 deletes source paths. Plan 5 cannot mutate the local runtime until all four repositories have pushed cutover commits and their owner gates pass.
 
 ## Failure Policy
 
-The migration is fail-closed. Missing source locks, incompatible base versions, path collisions, local drift, malformed structured configuration, stale preflight digests, or missing recovery tag stop the operation before the affected mutation.
+The migration and every installer fail closed on unmapped ownership, path collision, unexplained drift, missing hard dependency, malformed structured configuration, concurrent change, unavailable locked source, missing pushed recovery tag, or unexpected legacy state.
 
-Warnings are not accepted for ownership ambiguity or potential data loss. The operator receives the exact path, current owner evidence, expected digest, actual digest, and safe next action.
+Partial success is never reported as success. Errors identify the resource, expected and actual state, owner evidence, completed target/actions, and the exact safe next step. Warnings do not substitute for decisions involving potential data loss.
