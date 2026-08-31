@@ -2686,6 +2686,21 @@
       ],
       "parallel_safe": true,
       "timeout_sec": 60
+    },
+    {
+      "id": "ownership-inventory",
+      "command": [
+        "python3",
+        "tests/test-ownership-inventory.py"
+      ],
+      "area": "install-runtime",
+      "tier": "full",
+      "tags": [
+        "python",
+        "split"
+      ],
+      "parallel_safe": true,
+      "timeout_sec": 60
     }
   ]
 }
