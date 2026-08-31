@@ -1,6 +1,6 @@
 # Repository Split and Clean Runtime Migration Design
 
-**Status:** The simplified architecture was approved in conversation on 2026-08-31. This rewritten specification is pending the user's written-spec review and does not authorize runtime mutation.
+**Status:** Written spec approved for implementation planning on 2026-08-31. Five ordered plans live under `docs/superpowers/plans/2026-08-31--repository-split--01` through `--05`. Runtime mutation remains unauthorized until Plan 5 cutover gates pass and all four remotes have pushed cutover commits.
 
 **Authority:** This document is the single design source for the repository split and the one-time local runtime migration. It does not replace standard-chain canonical artifacts or enter `contracts/active-doc-scope.yaml`.
 
@@ -715,15 +715,15 @@ Rejected by user decision. It duplicates Git recovery, accumulates unmaintained 
 
 ## Implementation Decomposition
 
-This specification is intentionally one architectural decision but not one implementation plan. After written-spec approval, create five ordered plans with separate review gates:
+This specification is one architectural decision. Implementation is five ordered plans with separate review gates:
 
-1. **Pre-split inventory and Base extraction** — freeze the machine-readable ownership denominator, push the recovery tag, create Base, move its active evaluators/tests, and prove Base lifecycle behavior.
-2. **Daily extraction** — move/fetch the 42 Daily Skills, source locks, adapters, surfaces, dependencies, and `skill-pull`; prove vendor fidelity and install behavior.
-3. **Personal extraction** — move the 14 Personal Skills and their source-specific maintenance assets; prove no rejected Skill or Team machinery crosses the boundary.
-4. **Team contraction and active-tree cleanup** — remove already-pushed Base/Daily/Personal sources, rewrite active refs/tests/workflows, retain all standard-chain machinery, and prune only unreferenced generated artifacts.
-5. **Cleaner and local cutover** — prove migration fixtures and interruption handling, run isolated Base+Daily E2E, review the real dry-run, remove the old installation, fresh-install Base+Daily, and retire legacy state.
+1. `docs/superpowers/plans/2026-08-31--repository-split--01-pre-split-inventory-and-base-extraction.md`
+2. `docs/superpowers/plans/2026-08-31--repository-split--02-daily-extraction.md`
+3. `docs/superpowers/plans/2026-08-31--repository-split--03-personal-extraction.md`
+4. `docs/superpowers/plans/2026-08-31--repository-split--04-team-contraction-and-active-tree-cleanup.md`
+5. `docs/superpowers/plans/2026-08-31--repository-split--05-cleaner-and-local-cutover.md`
 
-Plans 1–3 copy and verify destinations before Plan 4 deletes source paths. Plan 5 cannot mutate the local runtime until all four repositories have pushed cutover commits and their owner gates pass.
+Plans 1–3 copy and verify destinations before Plan 4 deletes source paths. Plan 5 cannot mutate the local runtime until all four repositories have pushed cutover commits and their owner gates pass. Physical remote URLs are a Plan 1 hard gate and do not change runtime ownership.
 
 ## Failure Policy
 
