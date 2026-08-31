@@ -142,6 +142,35 @@ class OwnershipInventoryTests(unittest.TestCase):
             self.assertNotIn("findings.md", inventory.delete_from_active_head)
             self.assertIn("findings.md", inventory.keep_for_inbound_ref)
 
+    def test_base_checkout_payload_matches_tagged_source(self) -> None:
+        base = Path("/Users/lijieli/base-config")
+        self.assertTrue((base / ".git").exists(), "base-config repo missing")
+        src_root = Path(__file__).resolve().parents[1]
+        mapping = {
+            "assistant.md": "shared/assistant.md",
+            "rules/code-changes.md": "shared/rules/code-changes.md",
+            "rules/completion-claims.md": "shared/rules/completion-claims.md",
+            "rules/document-governance.md": "shared/rules/document-governance.md",
+            "rules/execution-control.md": "shared/rules/execution-control.md",
+            "reference/authentication-and-authorization.md": "shared/reference/authentication-and-authorization.md",
+            "reference/code-comments.md": "shared/reference/code-comments.md",
+            "reference/code-structure-reuse.md": "shared/reference/code-structure-reuse.md",
+            "reference/constants-and-configuration.md": "shared/reference/constants-and-configuration.md",
+            "reference/error-handling.md": "shared/reference/error-handling.md",
+            "reference/impact-analysis.md": "shared/reference/impact-analysis.md",
+            "reference/performance-and-efficiency.md": "shared/reference/performance-and-efficiency.md",
+            "reference/协作判断.md": "shared/reference/协作判断.md",
+            "reference/技术方案设计.md": "shared/reference/技术方案设计.md",
+            "reference/测试规范.md": "shared/reference/测试规范.md",
+        }
+        for dst, src in mapping.items():
+            left = (src_root / src).read_bytes()
+            right = (base / dst).read_bytes()
+            self.assertEqual(left, right, dst)
+        forbidden = ["skills", "hooks", "agents", "protocols", "community", "shared"]
+        for name in forbidden:
+            self.assertFalse((base / name).exists(), name)
+
 
 if __name__ == "__main__":
     unittest.main()
