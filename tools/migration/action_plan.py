@@ -5,10 +5,13 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import time
 from dataclasses import dataclass, replace
 from enum import Enum
 from pathlib import Path
 from typing import Iterable, Literal, Mapping
+
+_FS_WALK_TIMEOUT_SEC = 60
 
 from tools.install.tree_digest import canonical_tree_digest
 from tools.migration import legacy_inventory as inventory
@@ -216,16 +219,22 @@ def _expected_from_tag_root(home: Path, tag_root: Path) -> dict[str, bytes]:
 
 
 def _iter_dir_children(root: Path) -> list[Path]:
+    deadline = time.monotonic() + _FS_WALK_TIMEOUT_SEC
     children: list[Path] = []
     with os.scandir(root) as entries:
         for entry in entries:
+            if time.monotonic() > deadline:
+                raise TimeoutError(f"fs walk timed out: {root}")
             children.append(Path(entry.path))
     return sorted(children)
 
 
 def _iter_files(root: Path) -> list[Path]:
+    deadline = time.monotonic() + _FS_WALK_TIMEOUT_SEC
     files: list[Path] = []
     for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        if time.monotonic() > deadline:
+            raise TimeoutError(f"fs walk timed out: {root}")
         dirnames.sort()
         for name in sorted(filenames):
             files.append(Path(dirpath) / name)
