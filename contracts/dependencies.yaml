@@ -1,0 +1,30 @@
+schema_version: 1
+repo_requires:
+  - repo_id: base-config
+    target: same
+    resource_ids:
+      - assistant
+      - rules/code-changes.md
+      - rules/completion-claims.md
+      - rules/document-governance.md
+      - rules/execution-control.md
+      - reference/authentication-and-authorization.md
+      - reference/code-comments.md
+      - reference/code-structure-reuse.md
+      - reference/constants-and-configuration.md
+      - reference/error-handling.md
+      - reference/impact-analysis.md
+      - reference/performance-and-efficiency.md
+      - reference/协作判断.md
+      - reference/技术方案设计.md
+      - reference/测试规范.md
+edges:
+  - caller: fix
+    scope: runtime-invocation
+    required_unit: systematic-debugging
+    owner: daily-skills
+optional_edges:
+  - caller: qa
+    unit: webapp-testing
+    owner: daily-skills
+    class: optional

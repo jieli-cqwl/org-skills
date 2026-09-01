@@ -5,61 +5,6 @@
     "max_description_chars": 220
   },
   "skills": {
-    "agent-browser": {
-      "mode": "auto",
-      "owner": "community",
-      "auto_class": "high_frequency",
-      "reason": "Browser automation requests should route automatically with external-action constraints.",
-      "description": "Use for browser automation on remote pages, logged-in sites, forms, screenshots, scraping, or non-local web flows."
-    },
-    "agent-reach": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Authenticated web/social workflows should be explicit."
-    },
-    "algorithmic-art": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Generative art workflows are specialized and low-frequency."
-    },
-    "architecture": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "HTML/CSS architecture diagram generation is a specialized document workflow and must be explicitly invoked."
-    },
-    "baoyu-markdown-to-html": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Markdown 转 HTML 会执行本地渲染脚本且容易和普通文档任务混淆，必须显式触发。"
-    },
-    "bb-browser": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Logged-in browser access should be explicit."
-    },
-    "brainstorming": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
-    },
-    "brand-guidelines": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Brand guideline work is explicit and artifact-heavy."
-    },
-    "canvas-design": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Canvas design work is specialized and should be explicit."
-    },
-    "claude-api": {
-      "mode": "manual",
-      "owner": "first-party",
-      "codex_execution": "inline",
-      "reason": "Claude API and Anthropic SDK work is specialized and should be explicitly invoked.",
-      "description": "Use for Claude API / Anthropic SDK code, prompt caching, tools, models, or migrations."
-    },
     "cli-updater": {
       "mode": "manual",
       "owner": "first-party",
@@ -69,11 +14,6 @@
       "mode": "manual",
       "owner": "claude-only",
       "reason": "Claude-only fix loop should be explicitly invoked."
-    },
-    "code-to-prd": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "从历史代码反向生成 PRD 会影响产品事实源且可能生成大量本地产物，必须由用户显式触发。"
     },
     "commit": {
       "mode": "manual",
@@ -91,11 +31,6 @@
         "tech-lead"
       ],
       "reason": "Cross-artifact consistency audits run through the consistency-auditor agent as advisory-only evidence; avoid wrapping it in a generic nested subagent."
-    },
-    "darwin-skill": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Darwin/persona workflows should be explicit."
     },
     "deep-research": {
       "mode": "manual",
@@ -131,49 +66,15 @@
       ],
       "reason": "Developer task execution runs through the managed developer agent after an explicit task contract."
     },
-    "dispatching-parallel-agents": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "conditional_coordination",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
-    },
-    "doc-coauthoring": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Document coauthoring workflows are explicit."
-    },
     "doc-review-fix": {
       "mode": "manual",
       "owner": "claude-only",
       "reason": "Claude-only document review loop should be explicitly invoked."
     },
-    "docx": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Word document manipulation is specialized and explicit."
-    },
-    "executing-plans": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
-    },
     "feishu-docs": {
       "mode": "manual",
       "owner": "first-party",
       "reason": "Feishu document mutation requires explicit user intent."
-    },
-    "find-skills": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Skill discovery should be explicit to avoid hijacking ordinary Skill discussion.",
-      "description": "Use only when finding, installing, updating, or comparing installable agent skills."
-    },
-    "finishing-a-development-branch": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
     },
     "fix": {
       "mode": "manual",
@@ -186,79 +87,17 @@
       ],
       "reason": "Root-cause fix mode runs through the managed fixer agent from explicit failure evidence."
     },
-    "frontend-design": {
-      "mode": "auto",
-      "owner": "first-party",
-      "auto_class": "high_frequency",
-      "reason": "Frontend implementation requests should route automatically.",
-      "description": "Use for building or modifying frontend UI, pages, components, dashboards, apps, or HTML/CSS/React layouts."
-    },
     "github-repo-radar": {
       "mode": "manual",
       "owner": "first-party",
       "codex_execution": "subagent_clean",
       "reason": "GitHub repository radar is a specialized research workflow and must be explicitly invoked."
     },
-    "graphify": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Graphify 会扫描目录、写入 graphify-out，并可安装/调用 Python graphifyy 与外部集成，必须由用户显式触发。"
-    },
-    "humanizer-zh": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Chinese humanization is a specialized edit mode."
-    },
-    "internal-comms": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Internal communications drafting is explicit."
-    },
-    "mcp-builder": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "MCP server construction is specialized and should be explicit."
-    },
-    "mermaid-diagrams": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Mermaid 图表生成是专门的文档/架构图工作流，避免抢占普通架构讨论或文档编辑，必须由用户显式触发。"
-    },
-    "notebooklm": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "NotebookLM browser workflows require explicit user intent."
-    },
     "overview": {
       "mode": "manual",
       "owner": "first-party",
       "codex_execution": "subagent_clean",
       "reason": "Project overview writes artifacts and requires confirmation, so it should be explicitly invoked."
-    },
-    "pdf": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "PDF workflows are specialized and explicit."
-    },
-    "planning-with-files": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "File-based planning is an explicit scratchpad workflow and must not replace standard-chain artifacts or auto-trigger."
-    },
-    "pptx": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Presentation workflows are specialized and explicit."
-    },
-    "prd": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "PRD 草拟会和标准产品链路冲突，必须由用户显式触发。"
-    },
-    "prompt-optimizer": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Prompt optimization for copy-paste chat prompts should be explicit so it does not hijack ordinary tasks."
     },
     "product-director": {
       "mode": "manual",
@@ -279,11 +118,6 @@
       "mode": "manual",
       "owner": "first-party",
       "reason": "全房通 Git 分支流程会影响仓库状态和推送边界，必须由用户显式触发。"
-    },
-    "qft-branch-management": {
-      "mode": "manual",
-      "owner": "first-party",
-      "reason": "全房通分支创建和推送会影响 Git 状态，必须由用户显式触发。"
     },
     "project-memory": {
       "mode": "manual",
@@ -306,22 +140,10 @@
       ],
       "reason": "QA ownership runs through the managed qa agent with an explicit submitted build or task."
     },
-    "receiving-code-review": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
-    },
     "refactor": {
       "mode": "manual",
       "owner": "first-party",
       "reason": "Refactor work changes structure and should be explicitly invoked."
-    },
-    "requesting-code-review": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
     },
     "research": {
       "mode": "manual",
@@ -353,23 +175,6 @@
       "owner": "first-party",
       "reason": "Security reviews are high-impact scans and should be explicitly invoked."
     },
-    "self-improving-agent": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Self-improvement memory workflows should be explicit."
-    },
-    "skill-creator": {
-      "mode": "auto",
-      "owner": "community",
-      "auto_class": "high_frequency",
-      "reason": "Skill creation or editing requests should route automatically; Claude and Codex both use the repository-managed vendored Anthropic skill.",
-      "description": "Use when creating, editing, evaluating, or optimizing a Skill or trigger description."
-    },
-    "skill-pull": {
-      "mode": "manual",
-      "owner": "first-party",
-      "reason": "External Skill source updates should be explicit."
-    },
     "skill-quality-audit": {
       "mode": "manual",
       "owner": "first-party",
@@ -377,23 +182,6 @@
       "codex_execution": "inline",
       "allow_nested_agents": true,
       "reason": "Skill quality audits are high-cost orchestrator workflows and own their internal subagent/eval dispatch."
-    },
-    "slack-gif-creator": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Slack GIF creation is specialized and explicit."
-    },
-    "subagent-driven-development": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "conditional_coordination",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
-    },
-    "systematic-debugging": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
     },
     "tech-lead": {
       "mode": "manual",
@@ -405,49 +193,10 @@
       "owner": "first-party",
       "reason": "Test obligation design requires confirmed requirements and architecture."
     },
-    "test-driven-development": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
-    },
-    "theme-factory": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Theme generation is specialized and explicit."
-    },
-    "to-prd": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "从上下文生成 PRD 会影响产品事实源，必须手动触发。"
-    },
-    "ui-ux-pro-max": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Large UI/UX reference skill is low-frequency and should be explicitly invoked."
-    },
-    "using-git-worktrees": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
-    },
-    "using-superpowers": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
-    },
     "ux": {
       "mode": "manual",
       "owner": "first-party",
       "reason": "UX walkthroughs and state matrices should be explicit."
-    },
-    "verification-before-completion": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
     },
     "verify": {
       "mode": "manual",
@@ -460,39 +209,10 @@
       ],
       "reason": "Task-level AC verification runs through the managed verifier agent from explicit task context."
     },
-    "web-artifacts-builder": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Web artifact building is specialized and explicit."
-    },
-    "webapp-testing": {
-      "mode": "auto",
-      "owner": "community",
-      "auto_class": "high_frequency",
-      "reason": "Local web app testing should route automatically when needed.",
-      "description": "Use for local web app testing with Playwright, screenshots, browser logs, or UI behavior checks."
-    },
     "worktree": {
       "mode": "manual",
       "owner": "first-party",
       "reason": "Worktree creation changes git state and should be explicit."
-    },
-    "writing-plans": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
-    },
-    "writing-skills": {
-      "mode": "auto",
-      "owner": "superpowers",
-      "auto_class": "workflow_guardrail",
-      "reason": "Official Superpowers mirror; preserve upstream behavior."
-    },
-    "xlsx": {
-      "mode": "manual",
-      "owner": "community",
-      "reason": "Spreadsheet workflows are specialized and explicit."
     }
   }
 }
