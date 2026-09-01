@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 文件职责：验证 Skill 运行面自动/手动/禁用策略由显式合同驱动。
+# 文件职责：验证 Team Skill 运行面自动/手动/禁用策略由显式合同驱动。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -34,6 +34,27 @@ if not isinstance(auto_limit, int) or auto_limit <= 0:
 skills = contract.get("skills")
 if not isinstance(skills, dict) or not skills:
     raise SystemExit("contracts/skill-runtime-surface.json: skills must be a non-empty object")
+
+TEAM = {
+    "cli-updater", "commit", "consistency-audit", "deep-research",
+    "delivery-estimator", "delivery-owner", "design", "developer",
+    "feishu-docs", "fix", "github-repo-radar", "overview",
+    "product-director", "product-manager", "project-memory", "prompt",
+    "qa", "qft-branch-flow", "qft-group-chat-export", "refactor",
+    "research", "review", "rules-manager", "scan", "security",
+    "skill-quality-audit", "tech-lead", "test-design", "ux", "verify",
+    "worktree",
+}
+CLAUDE_ONLY = {"code-review-fix", "doc-review-fix"}
+if set(skills) != TEAM | CLAUDE_ONLY:
+    raise SystemExit(
+        "surface keys must be Team ∪ Claude-only: "
+        f"missing={sorted((TEAM | CLAUDE_ONLY) - set(skills))} "
+        f"extra={sorted(set(skills) - (TEAM | CLAUDE_ONLY))}"
+    )
+for banned in ("brainstorming", "skill-creator", "skill-pull", "darwin-skill", "grilling"):
+    if banned in skills:
+        raise SystemExit(f"{banned} must not be installed from Team surface")
 
 valid_modes = {"auto", "manual", "off"}
 valid_execution_kinds = {"skill", "orchestrator", "agent_backed"}
@@ -90,58 +111,10 @@ for name, entry in sorted(skills.items()):
 
 if len(auto_skills) > auto_limit:
     raise SystemExit(f"auto skill count exceeds contract limit: {len(auto_skills)} > {auto_limit}")
-expected_auto = {
-    "agent-browser",
-    "brainstorming",
-    "dispatching-parallel-agents",
-    "executing-plans",
-    "finishing-a-development-branch",
-    "frontend-design",
-    "receiving-code-review",
-    "requesting-code-review",
-    "skill-creator",
-    "subagent-driven-development",
-    "systematic-debugging",
-    "test-driven-development",
-    "using-git-worktrees",
-    "using-superpowers",
-    "verification-before-completion",
-    "webapp-testing",
-    "writing-plans",
-    "writing-skills",
-}
-expected_auto_class = {
-    "agent-browser": "high_frequency",
-    "brainstorming": "workflow_guardrail",
-    "dispatching-parallel-agents": "conditional_coordination",
-    "executing-plans": "workflow_guardrail",
-    "finishing-a-development-branch": "workflow_guardrail",
-    "frontend-design": "high_frequency",
-    "receiving-code-review": "workflow_guardrail",
-    "requesting-code-review": "workflow_guardrail",
-    "skill-creator": "high_frequency",
-    "subagent-driven-development": "conditional_coordination",
-    "systematic-debugging": "workflow_guardrail",
-    "test-driven-development": "workflow_guardrail",
-    "using-git-worktrees": "workflow_guardrail",
-    "using-superpowers": "workflow_guardrail",
-    "verification-before-completion": "workflow_guardrail",
-    "webapp-testing": "high_frequency",
-    "writing-plans": "workflow_guardrail",
-    "writing-skills": "workflow_guardrail",
-}
-actual_auto = set(auto_skills)
-if actual_auto != expected_auto:
-    raise SystemExit(
-        "auto skill set mismatch: "
-        f"missing={sorted(expected_auto - actual_auto)} extra={sorted(actual_auto - expected_auto)}"
-    )
-for name, auto_class in expected_auto_class.items():
-    if skills[name].get("auto_class") != auto_class:
-        raise SystemExit(f"{name}: auto_class must be {auto_class}")
+if auto_skills:
+    raise SystemExit(f"Team surface has no auto skills; found {auto_skills}")
 
 expected_codex_execution = {
-    "claude-api": "inline",
     "github-repo-radar": "subagent_clean",
     "overview": "subagent_clean",
     "research": "subagent_clean",
@@ -185,8 +158,6 @@ if actual_agent_backed != set(expected_agent_backed):
     )
 for name, (agent_type, required_dispatchers) in expected_agent_backed.items():
     entry = skills[name]
-    if entry.get("execution_kind") != "agent_backed":
-        raise SystemExit(f"{name}: execution_kind must be agent_backed")
     if entry.get("agent_type") != agent_type:
         raise SystemExit(f"{name}: agent_type must be {agent_type}")
     dispatchers = set(entry.get("dispatchers", []))
@@ -204,67 +175,45 @@ def require_routing_tokens(name: str, tokens: list[str]) -> None:
         raise SystemExit(f"{name}: missing routing boundary tokens: {missing}")
 
 
-require_routing_tokens("agent-browser", ["browser", "remote", "non-local"])
-require_routing_tokens("webapp-testing", ["local", "web app"])
-require_routing_tokens("frontend-design", ["building", "modifying", "frontend"])
 require_routing_tokens("research", ["evidence-backed", "outside installable agent skill"])
-require_routing_tokens("find-skills", ["installable agent skills"])
-if "evaluating" in str(skills["find-skills"].get("description", "")).lower():
-    raise SystemExit("find-skills description should not claim generic skill evaluation; route editing/optimization to skill-creator")
-if "docx" not in manual_skills:
-    raise SystemExit("docx should be manual-only")
 for manual_name in [
-    "architecture",
-    "claude-api",
-    "find-skills",
     "github-repo-radar",
-    "mermaid-diagrams",
     "overview",
-    "planning-with-files",
     "prompt",
     "qft-group-chat-export",
     "refactor",
     "review",
     "research",
     "security",
-    "ui-ux-pro-max",
 ]:
     if manual_name not in manual_skills:
         raise SystemExit(f"{manual_name} should be manual-only")
 
-source_skill_files = []
-source_roots = {}
-for root_dir in [
-    "shared/skills",
-    "community/superpowers/skills",
-    "community/anthropic/skills",
-    "community/vercel/skills",
-    "community/alchaincyf/skills",
-    "community/nextlevelbuilder/skills",
-    "community/panniantong/skills",
-    "community/open-skills/skills",
-    "claude/skills",
-]:
+for root_dir, required in (
+    ("shared/skills", TEAM),
+    ("claude/skills", CLAUDE_ONLY),
+):
     base = root / root_dir
-    if base.exists():
-        for source_skill_file in base.glob("*/SKILL.md"):
-            source_skill_files.append(source_skill_file)
-            source_roots[source_skill_file] = root_dir
-
-for skill_file in source_skill_files:
-    text = skill_file.read_text(encoding="utf-8")
-    match = re.search(r"^name:\s*['\"]?([^'\"\n]+)", text, re.MULTILINE)
-    skill_name = match.group(1).strip() if match else skill_file.parent.name
-    if skill_name not in skills and skill_file.parent.name not in skills and skill_file.parent.name not in source_dirs:
-        raise SystemExit(f"{skill_file}: missing from runtime surface contract")
-    if skill_file.parent.name in source_dirs and skill_name != source_dirs[skill_file.parent.name]:
-        raise SystemExit(f"{skill_file}: source_dir maps to {source_dirs[skill_file.parent.name]}, got {skill_name}")
-    entry = skills.get(skill_name) or skills.get(skill_file.parent.name)
-    repo_owned_source = source_roots.get(skill_file) in {"shared/skills", "claude/skills"}
-    if entry and entry.get("mode") == "auto" and repo_owned_source:
-        frontmatter = text.split("---\n", 2)[1]
-        if re.search(r"^hidden:\s*true\s*$", frontmatter, re.MULTILINE):
-            raise SystemExit(f"{skill_file}: auto skill source must not declare hidden=true")
+    found = {path.parent.name for path in base.glob("*/SKILL.md")}
+    missing = sorted(required - found)
+    if missing:
+        raise SystemExit(f"{root_dir}: missing Team Skill roots {missing}")
+    for skill_file in base.glob("*/SKILL.md"):
+        name = skill_file.parent.name
+        if name.endswith("-workspace") or name in {"lib", "skill-pull"}:
+            continue
+        if name not in skills:
+            raise SystemExit(f"{skill_file}: missing from Team runtime surface contract")
+        text = skill_file.read_text(encoding="utf-8")
+        match = re.search(r"^name:\s*['\"]?([^'\"\n]+)", text, re.MULTILINE)
+        skill_name = match.group(1).strip() if match else name
+        if skill_file.parent.name in source_dirs and skill_name != source_dirs[skill_file.parent.name]:
+            raise SystemExit(f"{skill_file}: source_dir maps to {source_dirs[skill_file.parent.name]}, got {skill_name}")
+        entry = skills.get(skill_name) or skills.get(name)
+        if entry and entry.get("mode") == "auto":
+            frontmatter = text.split("---\n", 2)[1]
+            if re.search(r"^hidden:\s*true\s*$", frontmatter, re.MULTILINE):
+                raise SystemExit(f"{skill_file}: auto skill source must not declare hidden=true")
 
 qft_skill = root / "shared/skills/qft-group-chat-export/SKILL.md"
 if not qft_skill.is_file():
@@ -285,43 +234,10 @@ if "contracts/skill-runtime-surface.json" not in readme:
 PY
 
 mkdir -p \
-  "$TMP_DIR/skills/agent-browser/agents" \
-  "$TMP_DIR/skills/docx/agents" \
   "$TMP_DIR/skills/cli-updater/agents" \
-  "$TMP_DIR/skills/claude-api/agents" \
   "$TMP_DIR/skills/consistency-audit/agents" \
   "$TMP_DIR/skills/research/agents" \
-  "$TMP_DIR/skills/scan/agents" \
-  "$TMP_DIR/skills/webapp-testing/agents"
-cat > "$TMP_DIR/skills/agent-browser/SKILL.md" <<'EOF_SKILL'
----
-name: agent-browser
-description: Browser automation CLI for AI agents.
-hidden: true
----
-
-# Agent Browser
-EOF_SKILL
-cat > "$TMP_DIR/skills/agent-browser/agents/openai.yaml" <<'EOF_YAML'
-interface:
-  display_name: "Agent Browser"
-policy:
-  allow_implicit_invocation: false
-EOF_YAML
-cat > "$TMP_DIR/skills/docx/SKILL.md" <<'EOF_SKILL'
----
-name: docx
-description: Create, inspect, and edit Word documents.
----
-
-# DOCX
-EOF_SKILL
-cat > "$TMP_DIR/skills/docx/agents/openai.yaml" <<'EOF_YAML'
-interface:
-  display_name: "DOCX"
-  short_description: "Create, inspect, and edit Word documents"
-  default_prompt: "Use $docx to create, inspect, or edit Word documents."
-EOF_YAML
+  "$TMP_DIR/skills/scan/agents"
 cat > "$TMP_DIR/skills/cli-updater/SKILL.md" <<'EOF_SKILL'
 ---
 name: cli-updater
@@ -336,16 +252,6 @@ interface:
 policy:
   other_flag: true
 EOF_YAML
-cat > "$TMP_DIR/skills/claude-api/SKILL.md" <<'EOF_SKILL'
----
-name: claude-api
-description: |-
-  This official mirror description is intentionally much longer than the Codex runtime budget because the runtime surface contract owns the injected description for manual first-party skills.
-  Stale upstream trigger line that must not survive runtime description replacement.
----
-
-# Claude API
-EOF_SKILL
 cat > "$TMP_DIR/skills/consistency-audit/SKILL.md" <<'EOF_SKILL'
 ---
 name: consistency-audit
@@ -388,22 +294,6 @@ interface:
 policy:
   allow_implicit_invocation: false
 EOF_YAML
-cat > "$TMP_DIR/skills/webapp-testing/SKILL.md" <<'EOF_SKILL'
----
-name: webapp-testing
-description: Test local web apps with Playwright tooling.
----
-
-# Webapp Testing
-EOF_SKILL
-cat > "$TMP_DIR/skills/webapp-testing/agents/openai.yaml" <<'EOF_YAML'
-interface:
-  display_name: "Webapp Testing"
-  short_description: "Test local web apps with Playwright tooling"
-  default_prompt: "Use $webapp-testing to test a local web application."
-policy:
-  allow_implicit_invocation: false
-EOF_YAML
 
 python3 "$APPLY_TOOL" \
   --contract "$CONTRACT" \
@@ -411,65 +301,14 @@ python3 "$APPLY_TOOL" \
   --runtime codex \
   --audit-json "$TMP_DIR/audit.json"
 
-! grep -Fq 'hidden: true' "$TMP_DIR/skills/agent-browser/SKILL.md" \
-  || fail "Codex auto skill should not remain hidden"
-grep -Fq 'allow_implicit_invocation: true' "$TMP_DIR/skills/agent-browser/agents/openai.yaml" \
-  || fail "Codex auto skill should self-heal stale implicit invocation policy"
-grep -Fq 'disable-model-invocation: true' "$TMP_DIR/skills/docx/SKILL.md" \
+grep -Fq 'disable-model-invocation: true' "$TMP_DIR/skills/cli-updater/SKILL.md" \
   || fail "Codex manual-only SKILL.md should keep cross-runtime manual marker"
-grep -Fq 'allow_implicit_invocation: false' "$TMP_DIR/skills/docx/agents/openai.yaml" \
+grep -Fq 'allow_implicit_invocation: false' "$TMP_DIR/skills/cli-updater/agents/openai.yaml" \
   || fail "Codex manual-only openai.yaml should disable implicit invocation"
 grep -Fq 'other_flag: true' "$TMP_DIR/skills/cli-updater/agents/openai.yaml" \
   || fail "Codex manual-only policy merge should preserve existing policy keys"
-grep -Fq 'allow_implicit_invocation: false' "$TMP_DIR/skills/cli-updater/agents/openai.yaml" \
-  || fail "Codex manual-only policy merge should add implicit invocation flag"
 [ "$(grep -c '^policy:' "$TMP_DIR/skills/cli-updater/agents/openai.yaml")" -eq 1 ] \
   || fail "Codex manual-only policy merge must not create duplicate policy roots"
-python3 - "$CONTRACT" "$TMP_DIR/skills/claude-api/SKILL.md" <<'PY' \
-  || fail "Codex manual first-party runtime description should use contract override"
-import json
-import sys
-from pathlib import Path
-
-contract = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-skill_text = Path(sys.argv[2]).read_text(encoding="utf-8")
-frontmatter = skill_text.split("---\n", 2)[1]
-actual = ""
-for line in frontmatter.splitlines():
-    if line.startswith("description:"):
-        actual = line.split(":", 1)[1].strip().strip("'\"")
-        break
-expected = contract["skills"]["claude-api"]["description"]
-if actual != expected:
-    raise SystemExit(f"runtime description mismatch: {actual!r} != {expected!r}")
-PY
-python3 - "$TMP_DIR/skills/claude-api/SKILL.md" <<'PY' \
-  || fail "Codex runtime description replacement must remove chomped block-scalar continuation lines"
-import sys
-from pathlib import Path
-
-skill_text = Path(sys.argv[1]).read_text(encoding="utf-8")
-frontmatter = skill_text.split("---\n", 2)[1]
-lines = frontmatter.splitlines()
-desc_idx = next(
-    (idx for idx, line in enumerate(lines) if line.startswith("description:")),
-    None,
-)
-if desc_idx is None:
-    raise SystemExit("missing description")
-for line in lines[desc_idx + 1 :]:
-    if not line.strip():
-        continue
-    if not line.startswith((" ", "\t")):
-        break
-    raise SystemExit("description continuation line survived replacement")
-PY
-! grep -Fq 'disable-model-invocation: true' "$TMP_DIR/skills/webapp-testing/SKILL.md" \
-  || fail "Codex auto skill should not be marked manual-only"
-! grep -Fq 'allow_implicit_invocation: false' "$TMP_DIR/skills/webapp-testing/agents/openai.yaml" \
-  || fail "Codex auto skill should not disable implicit invocation"
-grep -Fq 'allow_implicit_invocation: true' "$TMP_DIR/skills/webapp-testing/agents/openai.yaml" \
-  || fail "Codex auto skill should self-heal stale implicit invocation policy"
 grep -Fq 'codex_execution: subagent_clean' "$TMP_DIR/skills/research/agents/openai.yaml" \
   || fail "Codex research policy should expose subagent_clean execution"
 grep -Fq 'execution_kind: agent_backed' "$TMP_DIR/skills/consistency-audit/agents/openai.yaml" \
@@ -493,7 +332,7 @@ from pathlib import Path
 audit = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 if audit.get("runtime") != "codex":
     raise SystemExit("audit runtime mismatch")
-if audit.get("auto_count") != 2 or audit.get("manual_count") != 6:
+if audit.get("auto_count") != 0 or audit.get("manual_count") != 4:
     raise SystemExit(f"unexpected audit counts: {audit}")
 PY
 

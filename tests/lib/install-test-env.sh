@@ -76,7 +76,26 @@ install_test_new_home() {
 }
 
 install_test_state_root() {
-  printf '%s/.org-skills-state\n' "$1"
+  printf '%s/.local/state/skill-repos\n' "$1"
+}
+
+install_test_pythonpath() {
+  if [ -n "${PYTHONPATH:-}" ]; then
+    printf '%s:%s\n' "$ROOT" "$PYTHONPATH"
+  else
+    printf '%s\n' "$ROOT"
+  fi
+}
+
+install_test_run_env() {
+  local home_dir="$1"
+  shift
+  env -u ORG_STATE_ROOT \
+    HOME="$home_dir" \
+    SKILL_REPO_STATE_ROOT="$(install_test_state_root "$home_dir")" \
+    PYTHONPATH="$(install_test_pythonpath)" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    "$@"
 }
 
 install_test_run_install_allow_failure() {
@@ -89,9 +108,9 @@ install_test_run_install_allow_failure() {
     *e*) restore_errexit=1 ;;
   esac
   INSTALL_TEST_CURRENT_LOG="$log_file"
+  mkdir -p "$(dirname "$log_file")"
   set +e
-  env HOME="$home_dir" ORG_STATE_ROOT="$(install_test_state_root "$home_dir")" ORG_SKIP_CONTRACT_VALIDATION=1 ORG_SKIP_CODEX_HOOK_TRUST_AUDIT=1 \
-    bash "$ROOT/install.sh" "$@" >"$log_file" 2>&1
+  install_test_run_env "$home_dir" bash "$ROOT/install.sh" "$@" >"$log_file" 2>&1
   local rc=$?
   if [ "$restore_errexit" -eq 1 ]; then
     set -e
@@ -110,6 +129,40 @@ install_test_run_install() {
   }
 }
 
+BASE_REPO="${BASE_REPO:-/Users/lijieli/base-config}"
+
+install_test_run_base_allow_failure() {
+  local home_dir="$1"
+  local log_file="$2"
+  local restore_errexit=0
+  shift 2
+
+  case "$-" in
+    *e*) restore_errexit=1 ;;
+  esac
+  INSTALL_TEST_CURRENT_LOG="$log_file"
+  mkdir -p "$(dirname "$log_file")"
+  [ -x "$BASE_REPO/install.sh" ] || install_test_fail "Base installer missing at $BASE_REPO/install.sh"
+  set +e
+  install_test_run_env "$home_dir" bash "$BASE_REPO/install.sh" "$@" >"$log_file" 2>&1
+  local rc=$?
+  if [ "$restore_errexit" -eq 1 ]; then
+    set -e
+  fi
+  return "$rc"
+}
+
+install_test_run_base() {
+  local home_dir="$1"
+  local log_file="$2"
+  shift 2
+
+  install_test_run_base_allow_failure "$home_dir" "$log_file" "$@" || {
+    local rc=$?
+    install_test_fail "Base install command failed with exit $rc"
+  }
+}
+
 install_test_run_install_fake_openspec_allow_failure() {
   local home_dir="$1"
   local log_file="$2"
@@ -120,9 +173,9 @@ install_test_run_install_fake_openspec_allow_failure() {
     *e*) restore_errexit=1 ;;
   esac
   INSTALL_TEST_CURRENT_LOG="$log_file"
+  mkdir -p "$(dirname "$log_file")"
   set +e
-  run_with_fake_openspec "$home_dir" env HOME="$home_dir" ORG_STATE_ROOT="$(install_test_state_root "$home_dir")" ORG_SKIP_CONTRACT_VALIDATION=1 ORG_SKIP_CODEX_HOOK_TRUST_AUDIT=1 \
-    bash "$ROOT/install.sh" "$@" >"$log_file" 2>&1
+  run_with_fake_openspec "$home_dir" install_test_run_env "$home_dir" bash "$ROOT/install.sh" "$@" >"$log_file" 2>&1
   local rc=$?
   if [ "$restore_errexit" -eq 1 ]; then
     set -e
@@ -145,7 +198,8 @@ install_test_create_baseline_home() {
   local name="${1:-baseline}"
 
   INSTALL_TEST_BASELINE_HOME="$(install_test_new_home "$name")"
-  install_test_run_install_fake_openspec "$INSTALL_TEST_BASELINE_HOME" "$(install_test_log_path "$name")" --target all --force --check quick
+  install_test_run_base "$INSTALL_TEST_BASELINE_HOME" "$(install_test_log_path "$name-base")" --target all
+  install_test_run_install "$INSTALL_TEST_BASELINE_HOME" "$(install_test_log_path "$name")" --target all
   printf '%s\n' "$INSTALL_TEST_BASELINE_HOME"
 }
 
