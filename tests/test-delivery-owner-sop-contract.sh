@@ -76,7 +76,7 @@ assert payload["status"] == "PASS"
 assert payload["decision"] == "REPLAY_CONTRACT_READY"
 assert payload["case_count"] == 4
 PY
-python3 - "$REPLAY" "$TMP_DIR/replay-bad-no-progress.md" <<'PY'
+python3 - "$REPLAY" "$TMP_DIR/replay-bad-missing-progress-file.md" <<'PY'
 import sys
 from pathlib import Path
 
@@ -89,11 +89,11 @@ after = after.replace("next_owner: user", "next_owner: fixer agent", 1)
 target.write_text(before + marker + after, encoding="utf-8")
 PY
 set +e
-bash "$REPLAY_CHECK" --replay "$TMP_DIR/replay-bad-no-progress.md" >"$TMP_DIR/replay-bad-no-progress.json"
+bash "$REPLAY_CHECK" --replay "$TMP_DIR/replay-bad-missing-progress-file.md" >"$TMP_DIR/replay-bad-missing-progress-file.json"
 replay_bad_rc=$?
 set -e
 [ "$replay_bad_rc" -ne 0 ] || fail "behavior replay check should fail when no-progress keeps dispatching fixer agent"
-python3 - "$TMP_DIR/replay-bad-no-progress.json" <<'PY'
+python3 - "$TMP_DIR/replay-bad-missing-progress-file.json" <<'PY'
 import json
 import sys
 payload = json.load(open(sys.argv[1], encoding="utf-8"))

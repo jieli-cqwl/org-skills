@@ -1,1 +1,0 @@
-下一步先把 PM 阶段的评审闭环固化成固定动作：S11 仍并行召集产品/架构/测试 3 位 reviewer，结果统一写入 brief.md 的「审查结论」，并保留审查汇总、问题台账、收敛轮次摘要三块。必须显式保留 PR/AR/TR 稳定 issue、WARN 承接、HIS 历史记录、Issue Count 只算未关闭项、首轮全 PASS 也跑确认轮、10 轮上限、FAIL 递归修复，用户裁决记录只在 ASK_USER/BLOCKED 时填；否则 split 后最容易丢跨职能视角和未关闭问题。

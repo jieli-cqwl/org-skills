@@ -1,4 +1,0 @@
-interface:
-  display_name: "Tech Lead"
-  short_description: "Review complex design and create AI-executable plan"
-  default_prompt: "Use $tech-lead to review complex design and create an AI-executable execution plan."

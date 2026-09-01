@@ -1,4 +1,0 @@
-interface:
-  display_name: "Product Manager"
-  short_description: "Handoff-based PRD refinement and UNIT co-creation"
-  default_prompt: "Use $product-manager to refine the director baseline into UNITs, ACs, and final delivery confirmation."

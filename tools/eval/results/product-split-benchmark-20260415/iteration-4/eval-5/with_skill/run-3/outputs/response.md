@@ -1,5 +1,0 @@
-你要的是：按当前 playbook 判断这类入驻需求的 Phase 划分是否合理，而不是按实现步骤硬拆。
-
-按文档，Phase 先看交付价值，不看 UNIT 数：每个 Phase 要有独立可感知价值、范围自包含，并按“核心→增强/扩展”渐进交付；没明确切分信号时默认单 Phase。放到这个需求里，我会把“准入审核+开户配置+首单激活”视为核心闭环，“后续运营报表”只有在能独立上线、且不依赖前序未完成交付时才单独成 Phase。再看后验校验：空 Phase、跨 Phase 硬依赖都不合理，Director 侧另会给出预期 UNIT 3-7，但只是辅助，不是主判据。
-
-依据见 [phase-splitting-guide.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product-director/references/phase-splitting-guide.md#L7)、[playbook-map.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product-shared/references/playbook-map.md#L80)、[product-director/SKILL.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product-director/SKILL.md#L53)。

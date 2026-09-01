@@ -1,1 +1,0 @@
-建议下一步进入 **`/product-director`**，不是 `/product-manager`。因为当前只停留在“老板觉得有问题、先做 dashboard 看看”的想法层，还没冻结根问题、成功标准和范围；按 `playbook-map`，这种状态应先由 Director 把“到底解决什么、怎么判定成功、边界在哪、Phase 怎么拆”收口。`/product-manager` 只适用于 Director 基线已确认并有 lock snapshot 之后，再细化 UNIT/AC。

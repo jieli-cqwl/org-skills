@@ -1,1 +1,0 @@
-下一步把评审闭环固化为：产品/架构/测试三视角并行首审，首轮全 PASS 也要补 CONFIRMATION；只重提 FAIL 视角，WARN 必须承接到 `brief.md#审查结论`，`Issue Count` 只算未关闭项；产品视角要核对 `brief.lock.json`/`prd.lock.json` 与 D-G1 一致，锁漂移直接 FAIL。原因是这几条就是 split 后防假 PASS、保基线的底线。

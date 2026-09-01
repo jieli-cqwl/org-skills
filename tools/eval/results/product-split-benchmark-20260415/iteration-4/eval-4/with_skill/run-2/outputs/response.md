@@ -1,8 +1,0 @@
-按当前文档，reviewer team 的闭环是硬规则，不是“做过 review 就算完”。
-
-- 编排：产品/架构/测试三视角并行；首轮全 `PASS` 也要再跑一轮 `CONFIRMATION`；有 `FAIL` 只重提 `FAIL` 视角，不重跑已 `PASS`。
-- 收敛：连续 2 轮 `FAIL` 数不减少就 `ASK_USER`；同一 issue 连续 3 轮未关闭就 `BLOCKED`；`WARN` 必须显式承接，不能口头带过。
-- 台账：稳定 issue 只用 `PR-* / AR-* / TR-*`；关闭后留痕改成 `HIS-*`；`Issue Count` 只算未关闭稳定 issue，`PASS` 必须为 `0`；台账不能空，首轮全 `PASS` 也要留 1 条 `HIS-*`，`Review Round` 只写首次出现轮次。
-- 必保：产品视角要显式保留 `R1` 的 UNIT 与根问题一致性、`R13` 成功信号完整性、`PR-C1` 共创可信度，以及 Director lock 与 `brief.lock.json / prd.lock.json` 一致性；锁漂移直接 `FAIL`，不得用 `WARN` 放行。结果要落到 `brief.md#审查结论 / 审查汇总 / 审查问题台账 / 收敛轮次摘要`，若触发 `ASK_USER / BLOCKED` 还要写 `用户裁决记录`，最后在 `brief.md#交付确认` 收口。范围或 Phase 要变，就回 `/product-director`。
-
-依据：[product-manager/SKILL.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product-manager/SKILL.md)，[playbook-map.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product-shared/references/playbook-map.md)，[prd-reviewer-prompt.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product-manager/references/prd-reviewer-prompt.md)，[brief-template.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product/references/templates/brief-template.md)，[tester-reviewer-prompt.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product-manager/references/tester-reviewer-prompt.md)

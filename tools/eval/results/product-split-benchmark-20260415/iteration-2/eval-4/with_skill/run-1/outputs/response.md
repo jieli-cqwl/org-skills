@@ -1,1 +1,0 @@
-下一步：在 product-manager 里把评审闭环固化成“三视角并行 + 复审纪律”。保留：三视角独立审，PASS 仍做 CONFIRMATION，重提 FAIL 视角，2 轮 FAIL 不减就 ASK_USER，3 轮未关就 BLOCKED，WARN 写入，Issue Count 只算未关 issue，PASS=0；Director lock 与 D-G1 一致，锁漂移直接 FAIL。原因：split 后保住这些门槛，防止走样。

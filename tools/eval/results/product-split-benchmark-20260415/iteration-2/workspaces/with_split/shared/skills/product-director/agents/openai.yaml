@@ -1,4 +1,0 @@
-interface:
-  display_name: "Product Director"
-  short_description: "Strategic product scoping and director baseline freeze"
-  default_prompt: "Use $product-director to clarify the root problem, scope phases, and freeze the director baseline."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Review"
-  short_description: "Deep code review with actionable suggestions"
-  default_prompt: "Use $review to perform a deep code review of changes."

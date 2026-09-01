@@ -1,1 +1,0 @@
-下一步按三视角并行做评审闭环：产品/架构/测试独立审查，首轮后必须再跑 `CONFIRMATION`；有 FAIL 只重提 FAIL 视角，PASS 不重跑。必须保留：`PR-/AR-/TR-` 稳定 issue id、`Issue Count` 只算未关闭项且 `PASS=0`、WARN 写入 `brief.md#审查结论`、Director 锁定内容一漂移即 FAIL。因为 split 后这些是防丢最佳实践的硬门禁。

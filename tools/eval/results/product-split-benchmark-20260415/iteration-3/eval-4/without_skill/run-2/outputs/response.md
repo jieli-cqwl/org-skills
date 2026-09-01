@@ -1,3 +1,0 @@
-按当前工作区，`product-manager` 没有单独 playbook，我按 `shared/skills/product` 的 S11-S12 来看。闭环要保住“3 个 reviewer 独立审同一批工件 → 主流程合并到 `brief.md` 的 `审查结论` → 仅修 FAIL 再复审 → 最后做用户确认输出”。
-
-必须显式保留的规则：不信任自述、三视角固定为产品/架构/测试、`FAIL` 阻塞且 `WARN` 必须承接、首轮全 PASS 也要补 `R2 / CONFIRMATION`、稳定 issue 只用 `PR-* / AR-* / TR-*`，关闭后转 `HIS-*`，`PASS` 时 `Issue Count=0`、`审查问题台账` 不能空、`用户裁决记录` 只在 `ASK_USER/BLOCKED` 写。见 [SKILL.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-3/workspaces/old_monolith/shared/skills/product/SKILL.md#L213) 和 [brief-template.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-3/workspaces/old_monolith/shared/skills/product/references/templates/brief-template.md#L121)。

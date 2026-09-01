@@ -1,6 +1,0 @@
-timestamp	commit	skill	old_score	new_score	status	dimension	note	eval_mode
-2026-04-19T11:44	baseline	review	-	72	baseline	-	canonical目标清楚但旧markdown子审查prompt与JSON产物冲突，步骤输入输出和失败边界不够具体	dry_run
-2026-04-19T11:55	9894bb8	review	72	83	keep	指令具体性	补强canonical中间包和JSON汇总规则；专项契约测试通过	dry_run
-2026-04-19T21:22	baseline	project-memory	-	71.5	baseline	-	结构清楚且实测优于baseline，但入口文档文件名真源缺失，audit实测误判 CLAUDE.md/AGENTS.md；流程输入输出与异常边界仍不够具体	full_test
-2026-04-19T21:43	no-git	project-memory	71.5	79.5	keep	边界条件	固定 CLAUDE.md/AGENTS.md 为唯一入口文档真源，收紧 init/audit 扫描范围并消除 audit 对其他 Markdown 的误判	full_test
-2026-04-19T21:43	no-git	project-memory	79.5	82.0	keep	边界条件/实测	新增“用户口头声明已有入口文档但真源未命中”冲突停止规则；首轮回复不再误入 init，而是先对齐现有文件路径或从零初始化	full_test

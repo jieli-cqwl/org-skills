@@ -1,7 +1,0 @@
-{
-  "eval_id": 5,
-  "eval_name": "phase-planning-partner-onboarding",
-  "prompt": "一个合作伙伴入驻需求里，既有准入审核、配置开户、首单激活，也有后续运营报表。split 之后应该怎么判断 Phase 规划是否合理？",
-  "expected_output": "应强调按交付价值和最小闭环切 Phase，而不是按实现步骤平均切块。",
-  "configuration": "old_monolith"
-}

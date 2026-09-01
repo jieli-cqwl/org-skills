@@ -1,7 +1,0 @@
-{
-  "eval_id": 3,
-  "eval_name": "legacy-brief-migration-pricing-center",
-  "prompt": "我手里有一份历史 brief，没有产品总监确认，也没有任何 lock snapshot。但我想直接接着往下细化 UNIT。split 之后现在应该怎么处理？",
-  "expected_output": "应拒绝自动补确认放行，要求 migration candidate、re-signoff 和首版 lock snapshot。",
-  "configuration": "with_split"
-}

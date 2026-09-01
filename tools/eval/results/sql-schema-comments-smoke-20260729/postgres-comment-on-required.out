@@ -1,1 +1,0 @@
-结论：Reviewer 的目标可能对，改法错。PostgreSQL 不是 MySQL，字段后写 `COMMENT` 是方言硬套，轻则不合规范，重则迁移直接炸。应补注释，但用 PG 方式：`COMMENT ON TABLE/COLUMN ... IS ...`，或迁移框架支持的 `comment:`。下一步：统一“要有注释”与“用哪种方言实现”。

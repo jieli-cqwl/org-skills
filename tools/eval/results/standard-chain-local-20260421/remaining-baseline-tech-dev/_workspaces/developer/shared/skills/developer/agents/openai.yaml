@@ -1,4 +1,0 @@
-interface:
-  display_name: "Developer"
-  short_description: "TDD-driven development, implement by task"
-  default_prompt: "Use $developer to implement the task with TDD."

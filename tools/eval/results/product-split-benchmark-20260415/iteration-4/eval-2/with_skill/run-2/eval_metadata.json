@@ -1,7 +1,0 @@
-{
-  "eval_id": 2,
-  "eval_name": "handoff-boundary-loyalty-phase-change",
-  "prompt": "Director 已经确认了 Phase 规划，但我在 PM 阶段发现想把两个 Phase 合成一个，还想顺手改掉范围描述。你告诉我现在该怎么推进，重点说边界，不用展开实现。",
-  "expected_output": "应指出这是 Director 锁定字段漂移，必须回退 /product-director，不能由 /product-manager 直接改。",
-  "configuration": "with_split"
-}

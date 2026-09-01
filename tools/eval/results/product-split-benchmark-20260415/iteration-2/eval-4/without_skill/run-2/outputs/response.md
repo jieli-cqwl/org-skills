@@ -1,1 +1,0 @@
-下一步：把产品阶段固定成 `S11→S12` 三审闭环，三份 reviewer prompt 沿用“不信任原则 + Findings 表”，审 `brief.md + phase-{N}/prd.md + phase-{N}/units/` 后合并进 `brief.md#审查结论`。必须显式保留：`FAIL` 先修后重审、`WARN` 承接、首轮全 PASS 也补 `R2/CONFIRMATION`、PASS 时 `Issue Count=0`、`PR/AR/TR` 只记未关闭稳定 issue、已关闭改 `HIS-*`、`审查问题台账` 不能空。原因：split 后闭环靠可解析台账和确认轮，不靠口头共识。

@@ -1,7 +1,0 @@
-{
-  "eval_id": 0,
-  "eval_name": "entry-routing-recommendation-rebuild",
-  "prompt": "我们准备重做一个 B2B 增长看板。现在只知道老板觉得“数据口径不统一，先上个 dashboard 看看”，还没有明确根问题、成功标准和范围。你会建议我下一步进入哪个 product skill，并说明为什么？不要直接开始写完整 PRD。",
-  "expected_output": "应先把请求路由到 /product-director，并解释要先冻结根问题、目标、范围和 Phase 骨架。",
-  "configuration": "with_split"
-}

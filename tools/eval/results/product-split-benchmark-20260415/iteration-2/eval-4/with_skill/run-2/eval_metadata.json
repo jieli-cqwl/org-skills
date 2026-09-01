@@ -1,7 +1,0 @@
-{
-  "eval_id": 4,
-  "eval_name": "review-orchestration-internal-approval",
-  "prompt": "split 以后我最担心 reviewer team 最佳实践丢了。现在 product-manager 阶段到底该怎么组织评审闭环，哪些是必须显式保留的规则？",
-  "expected_output": "应显式说明产品/架构/测试三视角、CONFIRMATION、ASK_USER、BLOCKED、R13 与 PR-C1。",
-  "configuration": "with_split"
-}

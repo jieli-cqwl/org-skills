@@ -1,7 +1,0 @@
-{
-  "eval_id": 1,
-  "eval_name": "solution-anchoring-growth-dashboard",
-  "prompt": "我已经想好了方案：给增长团队做一个大盘、加权限、再做导出。你先别管问题，直接帮我整理成产品方案。现在如果你是 product 体系，会怎么回应我？",
-  "expected_output": "应把用户从方案锚定拉回真实问题、成功标准和最小闭环，而不是直接顺着方案写需求。",
-  "configuration": "old_monolith"
-}

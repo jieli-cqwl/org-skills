@@ -1,5 +1,0 @@
-现在先停在 PM，不要在这里直接合并两个 Phase，也不要顺手改 Director 口径的范围描述。按文档，只要触到 Phase 边界、范围、规则或任何 `brief.lock.json` / `phase-{N}/prd.lock.json` 覆盖的锁定字段，就必须回 `/product-director` 重开 D-S4~D-G1 重新收口；PM 只负责冻结后的流程、UNIT、AC、审查和交付确认，不能改锁定内容。`[product-manager](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product-manager/SKILL.md#L44-L47)` `[`product-director`](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product-director/SKILL.md#L30-L33)` `[`playbook`](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product-shared/references/playbook-map.md#L37-L41)` `[`phase-guide`](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/with_split/shared/skills/product-director/references/phase-splitting-guide.md#L7-L12)`
-
-如果你要继续推进，边界是这条：
-- 只是措辞润色，且不改冻结范围口径，可以留在 PM 共享节补写。
-- 只要涉及“合并 Phase”或“改范围定义”，就算 Director 级变更，必须回 Director 重新裁决。

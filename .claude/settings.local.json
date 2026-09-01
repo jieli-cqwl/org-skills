@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep -roh reference/[a-zA-Z0-9_u4e00-u9fff-]*.md /Users/lijieli/org-claude-skills/shared/rules/ /Users/lijieli/org-claude-skills/shared/reference/ /Users/lijieli/org-claude-skills/shared/assistant.md)"
-    ]
-  }
-}

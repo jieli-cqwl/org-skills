@@ -1,4 +1,0 @@
-interface:
-  display_name: "Product"
-  short_description: "Product requirement analysis and PRD documentation"
-  default_prompt: "Use $product to analyze and document the requirement."

@@ -1,3 +1,0 @@
-你是在判断：合作伙伴入驻拆成多个 Phase 后，边界和顺序是否合理。按当前文档，Phase 先看“范围和交付价值”，不是看 UNIT 数。合理标准是：每个 Phase 都能独立交付可感知价值、边界自包含；只有出现“核心+增强 / 基础+高级 / 先收反馈 / 外部依赖时序 / 风险隔离”这类信号才拆；S7 后再查空 Phase、单 Phase >5 个 UNIT、跨 Phase 硬依赖。
-
-套到这个需求，通常把“准入审核 + 配置开户 + 首单激活”收成首个 MVP 闭环；“后续运营报表”只有在不阻塞前者时才放下一 Phase。若第二 Phase 反过来依赖第一 Phase 未完成交付，说明分组不合理；没切分信号就默认单 Phase。依据：[phase-splitting-guide.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/old_monolith/shared/skills/product/references/phase-splitting-guide.md) 和 [brief-template.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/old_monolith/shared/skills/product/references/templates/brief-template.md)。

@@ -1,2 +1,0 @@
-> 我先复述一下：你想做的是“给增长团队做大盘、加权限、再做导出”。但按 [product](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/old_monolith/shared/skills/product/SKILL.md) 和 [对话指南](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-4/workspaces/old_monolith/shared/skills/product/references/conversation-guide.md) 的规则，这还是方案，不是根问题，不能直接整理成产品方案。
-> 先回答一个问题：增长团队当前最主要卡点是 A 看数分散，B 权限边界不清，还是 C 结果需要导出交付？

@@ -1,8 +1,0 @@
-按当前 `product` skill，S11 仍是 3 个独立 reviewer 并行审查，不要退化成单人自查：产品看 R1-R6+PR-C1，架构看 R7-R9，测试看 R10-R13；S11 先汇总 Findings，再回填 `brief.md#审查结论`，只对 FAIL 视角修复重提，最多 10 轮；首轮全 PASS 也要补 `R2 / CONFIRMATION`，最后 S12 才做用户确认并输出。必须显式保留：`Issue Count` 只算未关闭稳定 issue，PASS 必须为 0；`PR/AR/TR` 只留 OPEN，已关闭项改 `HIS-*`；`审查问题台账` 不能空，首轮全 PASS 也要留 1 条 `HIS-*`；`Review Round` 只写首次出现轮次；`WARN` 要在审查结论里承接，`FAIL` 阻断；`交付确认` 必须写确认状态和真实时间。
-
-依据：
-- [shared/skills/product/SKILL.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-3/workspaces/old_monolith/shared/skills/product/SKILL.md#L213-L244)
-- [shared/skills/product/references/templates/brief-template.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-3/workspaces/old_monolith/shared/skills/product/references/templates/brief-template.md#L121-L165)
-- [shared/skills/product/references/prd-reviewer-prompt.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-3/workspaces/old_monolith/shared/skills/product/references/prd-reviewer-prompt.md#L7-L39)
-- [shared/skills/product/references/architect-reviewer-prompt.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-3/workspaces/old_monolith/shared/skills/product/references/architect-reviewer-prompt.md#L7-L32)
-- [shared/skills/product/references/tester-reviewer-prompt.md](/Users/lijieli/org-claude-skills/tools/eval/results/product-split-benchmark-20260415/iteration-3/workspaces/old_monolith/shared/skills/product/references/tester-reviewer-prompt.md#L7-L29)
