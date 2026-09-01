@@ -1,0 +1,1 @@
+Isolated fake HOME for clean-runtime cutover classification. Not a live HOME snapshot.
