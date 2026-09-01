@@ -1,0 +1,3 @@
+tag: base-config-cutover-start
+sha: bb314976b162eb22d51bfcfbc9b4d024543ca9fe
+role: test-only Team CI Base checkout; never copy into Team production paths

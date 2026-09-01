@@ -30,10 +30,12 @@ def _load_assert_destinations_pushed():
         raise RuntimeError(f"cannot load {path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module.assert_destinations_pushed
+    return module
 
 
-assert_destinations_pushed = _load_assert_destinations_pushed()
+_destination_proof = _load_assert_destinations_pushed()
+assert_destinations_pushed = _destination_proof.assert_destinations_pushed
+sibling_checkouts_available = _destination_proof.sibling_checkouts_available
 
 
 def first_party_skill_roots() -> set[str]:
@@ -72,7 +74,8 @@ class TeamInventoryTests(unittest.TestCase):
         self.assertEqual(data["edges"][0]["scope"], "runtime-invocation")
 
     def test_contracted_tree(self) -> None:
-        assert_destinations_pushed()
+        if sibling_checkouts_available():
+            assert_destinations_pushed()
         roots = first_party_skill_roots()
         self.assertEqual(roots, TEAM)
         self.assertFalse((ROOT / "shared/skills/skill-pull").exists())
@@ -84,7 +87,8 @@ class TeamInventoryTests(unittest.TestCase):
         self.assertTrue((ROOT / "shared/skills/qft-branch-flow-workspace").is_dir())
 
     def test_active_docs_do_not_point_at_moved_shared_payload(self) -> None:
-        assert_destinations_pushed()
+        if sibling_checkouts_available():
+            assert_destinations_pushed()
         agents = (ROOT / "AGENTS.md").read_text()
         self.assertNotIn("shared/assistant.md", agents)
         self.assertNotIn("shared/rules/*.md", agents)

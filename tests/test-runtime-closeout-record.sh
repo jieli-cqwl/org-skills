@@ -19,6 +19,6 @@ assert_present '3056999'
 assert_present 'context_contract_validator.py'
 assert_present 'Claude Code / Codex'
 assert_present 'bash tests/run-all.sh --quick'
-assert_present 'bash install.sh --target all --check quick'
+assert_present 'bash install.sh --target all --dry-run'
 
 printf '[PASS] runtime closeout record\n'

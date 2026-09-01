@@ -704,6 +704,22 @@ def apply_runtime_surface(staging_dir: Path, target: TargetName) -> None:
     )
 
 
+def render_skill_placeholders(skills_dir: Path, target: TargetName) -> None:
+    run_python_script(
+        REPO_ROOT / "tools" / "community" / "render_runtime_placeholders.py",
+        [
+            str(skills_dir),
+            f"$HOME/{TARGET_DIRNAME[target]}",
+            BASE_ASSISTANT_NAME[target],
+            f"$HOME/{SKILLS_REL[target].as_posix()}",
+        ],
+        timeout=_TOOL_TIMEOUT_SEC,
+        resource_id="skills",
+        target=target,
+        next_step="inspect staged Skill placeholders and rerun",
+    )
+
+
 def inject_claude_skill_hooks(skills_dir: Path, target: TargetName) -> None:
     run_python_script(
         REPO_ROOT / "tools" / "community" / "render_hook_registry.py",
@@ -840,6 +856,7 @@ def stage_skills(target: TargetName, staging_dir: Path) -> dict[str, Path]:
     apply_runtime_surface(skills_stage, target)
     if target == "claude":
         inject_claude_skill_hooks(skills_stage, target)
+    render_skill_placeholders(skills_stage, target)
     remaining = {
         path.name
         for path in skills_stage.iterdir()

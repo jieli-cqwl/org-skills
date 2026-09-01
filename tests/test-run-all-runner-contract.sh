@@ -246,6 +246,15 @@ for step in plan["steps"]:
         raise SystemExit(f"{step.get('id')} must not be part of the quick plan")
 PY
 
+assert_contains "python3 $ROOT/tests/test-eval-result-inbound-refs.py" "$full_plan" "full plan"
+assert_contains "python3 $ROOT/tests/test-split-destination-proof.py" "$full_plan" "full plan"
+assert_contains "python3 $ROOT/tests/test-team-inventory.py" "$full_plan" "full plan"
+assert_contains "python3 $ROOT/tests/test-base-checkout-contract.py" "$full_plan" "full plan"
+assert_not_contains "test-eval-result-inbound-refs.py" "$quick_plan" "quick plan"
+assert_not_contains "test-split-destination-proof.py" "$quick_plan" "quick plan"
+assert_not_contains "test-team-inventory.py" "$quick_plan" "quick plan"
+assert_not_contains "test-base-checkout-contract.py" "$quick_plan" "quick plan"
+
 full_json="$(bash "$RUNNER" --full --list --format=json)"
 python3 - "$full_json" <<'PY'
 import json
@@ -260,6 +269,16 @@ if "install-runtime" in steps:
     raise SystemExit("monolith install-runtime must not remain in the full plan")
 if "ownership-inventory" in steps:
     raise SystemExit("ownership-inventory must not remain in the full plan")
+for required_id in (
+    "eval-result-inbound-refs",
+    "split-destination-proof",
+    "team-inventory",
+    "base-checkout-contract",
+):
+    if required_id not in steps:
+        raise SystemExit(f"full plan missing {required_id}")
+    if steps[required_id].get("tier") == "quick":
+        raise SystemExit(f"{required_id} must stay off the quick plan")
 
 timeout = steps["design-skill-governance-redesign"].get("timeout_sec")
 if timeout != 300:

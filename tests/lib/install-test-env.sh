@@ -129,7 +129,7 @@ install_test_run_install() {
   }
 }
 
-BASE_REPO="${BASE_REPO:-/Users/lijieli/base-config}"
+BASE_CHECKOUT="${BASE_CHECKOUT:-/Users/lijieli/base-config}"
 
 install_test_run_base_allow_failure() {
   local home_dir="$1"
@@ -142,9 +142,9 @@ install_test_run_base_allow_failure() {
   esac
   INSTALL_TEST_CURRENT_LOG="$log_file"
   mkdir -p "$(dirname "$log_file")"
-  [ -x "$BASE_REPO/install.sh" ] || install_test_fail "Base installer missing at $BASE_REPO/install.sh"
+  [ -x "$BASE_CHECKOUT/install.sh" ] || install_test_fail "Base installer missing at $BASE_CHECKOUT/install.sh"
   set +e
-  install_test_run_env "$home_dir" bash "$BASE_REPO/install.sh" "$@" >"$log_file" 2>&1
+  install_test_run_env "$home_dir" bash "$BASE_CHECKOUT/install.sh" "$@" >"$log_file" 2>&1
   local rc=$?
   if [ "$restore_errexit" -eq 1 ]; then
     set -e

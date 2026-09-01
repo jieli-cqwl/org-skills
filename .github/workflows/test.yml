@@ -16,6 +16,8 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      BASE_CHECKOUT: ${{ github.workspace }}/tests/fixtures/base-config-cutover-start
     steps:
       - uses: actions/checkout@v4
         with:

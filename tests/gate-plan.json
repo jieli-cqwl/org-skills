@@ -485,6 +485,63 @@
       "timeout_sec": 30
     },
     {
+      "id": "base-checkout-contract",
+      "command": [
+        "python3",
+        "tests/test-base-checkout-contract.py"
+      ],
+      "area": "install-runtime",
+      "tier": "full",
+      "tags": [
+        "ci",
+        "python"
+      ],
+      "parallel_safe": true,
+      "timeout_sec": 120
+    },
+    {
+      "id": "eval-result-inbound-refs",
+      "command": [
+        "python3",
+        "tests/test-eval-result-inbound-refs.py"
+      ],
+      "area": "skill-evals",
+      "tier": "full",
+      "tags": [
+        "python"
+      ],
+      "parallel_safe": true,
+      "timeout_sec": 90
+    },
+    {
+      "id": "split-destination-proof",
+      "command": [
+        "python3",
+        "tests/test-split-destination-proof.py"
+      ],
+      "area": "preflight",
+      "tier": "full",
+      "tags": [
+        "python"
+      ],
+      "parallel_safe": true,
+      "timeout_sec": 180
+    },
+    {
+      "id": "team-inventory",
+      "command": [
+        "python3",
+        "tests/test-team-inventory.py"
+      ],
+      "area": "preflight",
+      "tier": "full",
+      "tags": [
+        "python"
+      ],
+      "parallel_safe": true,
+      "timeout_sec": 180
+    },
+    {
       "id": "github-branch-protection-contract",
       "command": [
         "python3",
