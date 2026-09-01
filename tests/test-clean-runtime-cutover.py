@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+FIXTURE_HOME = ROOT / "tests/fixtures/runtime-cutover/preflight-home"
 
 from tools.migration.action_plan import ActionClass, build_action_plan
 
@@ -62,6 +63,62 @@ class ActionPlanTests(unittest.TestCase):
         plan = build_action_plan(home, pre_split_tag="pre-split-2026-08-31")
         mystery = str(home / ".org-skills-state/mystery.txt")
         self.assertTrue(any(a.path == mystery and a.cls == ActionClass.CONFLICT for a in plan.actions))
+
+    def test_explained_drift_keeps_preserve_and_explicit_delete(self) -> None:
+        home = self._home()
+        learned = home / ".claude/skills/learned/x.md"
+        rejected = home / ".claude/skills/resume-tailor/SKILL.md"
+        plan = build_action_plan(
+            home,
+            pre_split_tag="pre-split-2026-08-31",
+            expected_bytes={str(learned): b"other\n", str(rejected): b"old\n"},
+        )
+        by_path = {a.path: a.cls for a in plan.actions}
+        self.assertEqual(by_path[str(home / ".claude/skills/learned")], ActionClass.PRESERVE_EXTERNAL)
+        self.assertEqual(by_path[str(home / ".claude/skills/resume-tailor")], ActionClass.REMOVE_EXPLICIT_DELETE)
+        self.assertFalse(any(a.cls == ActionClass.CONFLICT and "learned" in a.path for a in plan.actions))
+        self.assertFalse(any(a.cls == ActionClass.CONFLICT and "resume-tailor" in a.path for a in plan.actions))
+
+    def test_fixture_preflight_home_preserve_hooks_and_decoy_state(self) -> None:
+        home = FIXTURE_HOME
+        plan = build_action_plan(home, pre_split_tag="pre-split-2026-08-31")
+        by_path = {a.path: a.cls for a in plan.actions}
+        self.assertEqual(
+            by_path[str(home / ".org-skills-state/external-runtime-skills/codex.txt")],
+            ActionClass.DELETE_LEGACY_STATE,
+        )
+        for name in (
+            "superset_notify.sh",
+            "read_pages_context.py",
+            "worktree_create.sh",
+            "worktree_remove.sh",
+        ):
+            self.assertEqual(
+                by_path[str(home / ".claude/hooks" / name)],
+                ActionClass.PRESERVE_EXTERNAL,
+            )
+
+    def test_codex_hook_tree_non_preserve_is_remove_old_only(self) -> None:
+        home = self._home()
+        hook = home / ".codex/hooks/team_hook.sh"
+        hook.parent.mkdir(parents=True)
+        hook.write_text("team\n", encoding="utf-8")
+        plan = build_action_plan(home, pre_split_tag="pre-split-2026-08-31")
+        by_path = {a.path: a.cls for a in plan.actions}
+        self.assertEqual(by_path[str(hook)], ActionClass.REMOVE_OLD_ONLY)
+
+    def test_team_shared_skills_trees_are_remove_old_only(self) -> None:
+        home = self._home()
+        for rel in (".claude/shared/skills/lib", ".codex/shared/skills/lib"):
+            lib = home / rel
+            lib.mkdir(parents=True)
+            (lib / "note.md").write_text("team-lib\n", encoding="utf-8")
+        plan = build_action_plan(home, pre_split_tag="pre-split-2026-08-31")
+        by_path = {a.path: a.cls for a in plan.actions}
+        self.assertEqual(by_path[str(home / ".claude/shared/skills")], ActionClass.REMOVE_OLD_ONLY)
+        self.assertEqual(by_path[str(home / ".codex/shared/skills")], ActionClass.REMOVE_OLD_ONLY)
+        self.assertNotIn(str(home / ".claude/skills/lib"), by_path)
+        self.assertNotIn(str(home / ".codex/skills/lib"), by_path)
 
 
 if __name__ == "__main__":

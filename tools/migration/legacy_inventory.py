@@ -163,7 +163,8 @@ BASE_RUNTIME_PATHS = (
 )
 
 SKILL_ROOTS = (Path(".claude/skills"), Path(".agents/skills"))
-HOOK_ROOTS = (Path(".claude/hooks"),)
+HOOK_ROOTS = (Path(".claude/hooks"), Path(".codex/hooks"))
+TEAM_SUPPORT_TREES = (Path(".claude/shared/skills"), Path(".codex/shared/skills"))
 STATE_DIRNAME = ".org-skills-state"
 
 _KNOWN_STATE_LEAF_NAMES = frozenset(

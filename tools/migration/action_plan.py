@@ -116,6 +116,11 @@ def _classify_runtime(home: Path) -> list[Action]:
         if path.exists():
             record(path, ActionClass.REMOVE_FOR_FRESH_INSTALL, "base destination")
 
+    for rel in inventory.TEAM_SUPPORT_TREES:
+        path = home / rel
+        if path.exists():
+            record(path, ActionClass.REMOVE_OLD_ONLY, "team shared skills tree")
+
     state_root = home / inventory.STATE_DIRNAME
     if state_root.exists():
         for path in _iter_files(state_root):
@@ -127,10 +132,19 @@ def _classify_runtime(home: Path) -> list[Action]:
     return list(actions.values())
 
 
+_EXPLAINED_DRIFT_CLASSES = frozenset(
+    {ActionClass.PRESERVE_EXTERNAL, ActionClass.REMOVE_EXPLICIT_DELETE}
+)
+_MANAGED_DRIFT_CONFLICT_CLASSES = frozenset(
+    {ActionClass.REMOVE_OLD_ONLY, ActionClass.REMOVE_FOR_FRESH_INSTALL}
+)
+
+
 def _apply_unexplained_drift(
     actions: Iterable[Action], expected_bytes: Mapping[str, bytes]
 ) -> list[Action]:
-    # Legacy manifests are ownership clues, not content proof. Dirty fingerprint is not an exception.
+    # Preserve and approved-deletion diffs explain dirty-tree bytes.
+    # Only REMOVE_OLD_ONLY / REMOVE_FOR_FRESH_INSTALL mismatches are unexplained CONFLICT.
     drifted: list[str] = []
     for path_str, expected in expected_bytes.items():
         path = Path(path_str)
@@ -141,29 +155,34 @@ def _apply_unexplained_drift(
         return list(actions)
 
     updated: list[Action] = []
-    seen: set[str] = set()
+    explained: set[str] = set()
     for action in actions:
-        if _covers_any(action.path, drifted):
-            updated.append(replace(action, cls=ActionClass.CONFLICT, reason="unexplained drift"))
-        else:
+        covered = [path_str for path_str in drifted if _path_covers(action.path, path_str)]
+        if not covered:
             updated.append(action)
-        seen.add(action.path)
+            continue
+        if action.cls in _EXPLAINED_DRIFT_CLASSES:
+            updated.append(action)
+            explained.update(covered)
+            continue
+        if action.cls in _MANAGED_DRIFT_CONFLICT_CLASSES:
+            updated.append(replace(action, cls=ActionClass.CONFLICT, reason="unexplained drift"))
+            continue
+        updated.append(action)
+    seen = {action.path for action in updated}
     for path_str in drifted:
-        if path_str not in seen:
-            updated.append(Action(path=path_str, cls=ActionClass.CONFLICT, reason="unexplained drift"))
-            seen.add(path_str)
+        if path_str in explained or path_str in seen:
+            continue
+        if any(_path_covers(action.path, path_str) for action in updated):
+            continue
+        updated.append(Action(path=path_str, cls=ActionClass.CONFLICT, reason="unexplained drift"))
+        seen.add(path_str)
     return updated
 
 
-def _covers_any(action_path: str, drifted: Iterable[str]) -> bool:
-    prefix = action_path.rstrip("/") + "/"
-    for path_str in drifted:
-        if path_str == action_path or path_str.startswith(prefix):
-            return True
-        drifted_prefix = path_str.rstrip("/") + "/"
-        if action_path.startswith(drifted_prefix):
-            return True
-    return False
+def _path_covers(parent: str, child: str) -> bool:
+    prefix = parent.rstrip("/") + "/"
+    return child == parent or child.startswith(prefix)
 
 
 def _legacy_manifest_paths(home: Path) -> set[Path]:
