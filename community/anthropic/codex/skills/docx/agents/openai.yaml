@@ -1,4 +1,0 @@
-interface:
-  display_name: "DOCX"
-  short_description: "Create, inspect, and edit Word documents"
-  default_prompt: "Use $docx to create, inspect, or edit Word documents."

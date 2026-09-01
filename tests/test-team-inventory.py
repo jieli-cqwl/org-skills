@@ -1,8 +1,8 @@
 # tests/test-team-inventory.py
 from __future__ import annotations
 
+import importlib.util
 import json
-import sys
 import unittest
 from pathlib import Path
 
@@ -23,20 +23,17 @@ CLAUDE_ONLY = {"code-review-fix", "doc-review-fix"}
 NON_INSTALLABLE = {"lib", "qft-branch-flow-workspace"}
 
 
-def consume_phase_arg(argv: list[str]) -> str:
-    if "--phase" not in argv:
-        return "surface"
-    idx = argv.index("--phase")
-    if idx + 1 >= len(argv):
-        raise SystemExit("tests/test-team-inventory.py: --phase requires surface or tree")
-    phase = argv[idx + 1]
-    if phase not in {"surface", "tree"}:
-        raise SystemExit(f"tests/test-team-inventory.py: unknown --phase {phase}")
-    del argv[idx : idx + 2]
-    return phase
+def _load_assert_destinations_pushed():
+    path = ROOT / "tests" / "test-split-destination-proof.py"
+    spec = importlib.util.spec_from_file_location("test_split_destination_proof", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.assert_destinations_pushed
 
 
-PHASE = consume_phase_arg(sys.argv)
+assert_destinations_pushed = _load_assert_destinations_pushed()
 
 
 def first_party_skill_roots() -> set[str]:
@@ -74,11 +71,8 @@ class TeamInventoryTests(unittest.TestCase):
         self.assertEqual(edges, {("fix", "systematic-debugging", "daily-skills")})
         self.assertEqual(data["edges"][0]["scope"], "runtime-invocation")
 
-    @unittest.skipUnless(
-        PHASE == "tree",
-        "gated until Task 4 payload deletion; community/assistant still present",
-    )
     def test_contracted_tree(self) -> None:
+        assert_destinations_pushed()
         roots = first_party_skill_roots()
         self.assertEqual(roots, TEAM)
         self.assertFalse((ROOT / "shared/skills/skill-pull").exists())
@@ -86,6 +80,16 @@ class TeamInventoryTests(unittest.TestCase):
         self.assertFalse((ROOT / "shared/assistant.md").exists())
         self.assertFalse((ROOT / "shared/rules").exists())
         self.assertFalse((ROOT / "shared/reference").exists())
+        self.assertTrue((ROOT / "shared/skills/lib").is_dir())
+        self.assertTrue((ROOT / "shared/skills/qft-branch-flow-workspace").is_dir())
+
+    def test_active_docs_do_not_point_at_moved_shared_payload(self) -> None:
+        assert_destinations_pushed()
+        agents = (ROOT / "AGENTS.md").read_text()
+        self.assertNotIn("shared/assistant.md", agents)
+        self.assertNotIn("shared/rules/*.md", agents)
+        self.assertNotIn("community/superpowers/skills", agents)
+        self.assertIn("team-skills", agents)
 
 
 if __name__ == "__main__":

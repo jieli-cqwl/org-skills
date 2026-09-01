@@ -1,7 +1,0 @@
-{"type":"item.completed","item":{"id":"mention-only","type":"agent_message","text":"Read __CODEX_HOME__/reference/协作判断.md"}}
-{"type":"item.completed","item":{"id":"echo-path","type":"command_execution","command":"echo __CODEX_HOME__/reference/协作判断.md","exit_code":0,"status":"completed","aggregated_output":"__CODEX_HOME__/reference/协作判断.md"}}
-{"type":"item.completed","item":{"id":"locate-only","type":"command_execution","command":"rg -n 协作判断 __CODEX_HOME__/reference/协作判断.md","exit_code":0,"status":"completed","aggregated_output":"1:协作判断"}}
-{"type":"item.completed","item":{"id":"failed-read","type":"command_execution","command":"cat __CODEX_HOME__/reference/协作判断.md","exit_code":1,"status":"failed","aggregated_output":"missing"}}
-{"type":"item.completed","item":{"id":"empty-read","type":"command_execution","command":"cat __CODEX_HOME__/reference/协作判断.md","exit_code":0,"status":"completed","aggregated_output":""}}
-{"type":"item.completed","item":{"id":"wrong-path","type":"command_execution","command":"cat __CODEX_HOME__/reference/other.md","exit_code":0,"status":"completed","aggregated_output":"other"}}
-{"type":"item.started","item":{"id":"partial-read","type":"command_execution","command":"cat __CODEX_HOME__/reference/协作判断.md"}}

@@ -6,16 +6,15 @@
 | `bash tests/run-all.sh --quick` | 快速回归 |
 | `bash tests/run-all.sh` | 全量门禁 |
 | `bash install.sh --target all --dry-run` | 预览安装写入 |
-| `CODEX_SKILLS_DIR="$PWD/community/anthropic/skills" bash tests/run-all.sh --quick` | 本机缺 `skill-creator` 时的 quick 口径 |
 
 ## Instruction Sources
-- 不要把项目记忆写进 `shared/assistant.md`；它只维护安装后的 runtime 默认入口。
-- `shared/rules/*.md` 会安装到用户全局 runtime rules；只放安装后团队项目应统一遵守的硬规则。
+- 本仓 `repo_id` 是 `team-skills`；不拥有 runtime assistant、rules 或 reference 源树。
+- Team Skills 消费已安装 Base 的 rules 与 reference（`~/.claude` / `~/.codex`），不在本仓维护这些 runtime 文件。
 - 本仓维护规则写在根入口或 repo-local 文档，并用测试锁定承载位置。
 
 ## Skill Sources
-- `shared/skills/` 是 first-party 真源；`community/superpowers/skills` 是锁 ref 的第三方镜像。
-- 不要污染 `community/superpowers/skills`；保持 upstream 纯镜像，不放 overlay、adapter 或 runtime frontmatter。
+- `shared/skills/` 是 Team first-party 真源。
+- Superpowers 与第三方 vendor 归 Daily，不在本仓。
 
 ## Testing
 - 行为/约束变更先补可失败测试，再做最小实现，最后跑 fresh proving command。
@@ -25,4 +24,4 @@
 
 ## Workflow
 - 执行前定目标、对象、成功标准；改动前追影响面；交付前验证命令和 `git diff` 都要对上本次范围。
-- 文档命名、归档、接手和 standard-chain 状态规则以 `shared/rules/document-governance.md` 为准；`worklog.md` 只做导航。
+- 文档命名、归档、接手和 standard-chain 状态规则以已安装 Base `document-governance` 为准；`worklog.md` 只做导航。

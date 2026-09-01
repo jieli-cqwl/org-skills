@@ -202,8 +202,6 @@
       "id": "user-script-llm-boundary",
       "prompt": "你正在收口 design.json。哪些检查必须交给脚本/schema/hook，哪些判断由 LLM 做，哪些必须让用户确认？请基于 design 阶段给出执行边界，不要泛泛而谈。",
       "files": [
-        "shared/assistant.md",
-        "shared/rules/execution-control.md",
         "shared/skills/design/SKILL.md",
         "shared/skills/design/contracts/design.schema.json"
       ],
@@ -300,7 +298,6 @@
       "id": "upstream-business-change-blocks-architecture-freeze",
       "prompt": "设计合成草稿已经准备冻结，但用户突然补充：退款必须支持财务人工复核，原 UNIT 只覆盖自动退款。请以 design owner 判断能否继续写 final_confirmation，并说明必须回退到哪里。",
       "files": [
-        "shared/rules/execution-control.md",
         "shared/skills/design/SKILL.md",
         "shared/skills/product-manager/SKILL.md"
       ],

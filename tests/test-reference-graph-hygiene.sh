@@ -2,9 +2,6 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# shellcheck source=tests/lib/test-env.sh
-. "$ROOT/tests/lib/test-env.sh"
-ensure_test_rg
 
 fail() {
   printf '[FAIL] %s\n' "$*" >&2
@@ -12,60 +9,14 @@ fail() {
 }
 
 python3 - "$ROOT" <<'PY' || fail "reference graph hygiene contract violated"
-import re
 import sys
 from pathlib import Path
 
 root = Path(sys.argv[1])
-pattern = re.compile(
-    r'(?<![A-Za-z0-9_])'
-    r'(?:\{\{RUNTIME_HOME\}\}/|\.claude/|\.codex/|\./|\.\./|shared/)?'
-    r'rules/[^"\'` )(]+\.md'
-)
-
-
-def find_rule_backlinks(text: str) -> list[str]:
-    return [match.group(0) for match in pattern.finditer(text)]
-
-
-def assert_self_checks() -> None:
-    invalid_samples = [
-        "{{RUNTIME_HOME}}/rules/code-changes.md",
-        ".claude/rules/completion-claims.md",
-        ".codex/rules/execution-control.md",
-        "./rules/document-governance.md",
-        "../rules/code-changes.md",
-        "shared/rules/code-changes.md",
-        "rules/code-changes.md",
-    ]
-    valid_samples = [
-        "规则源以 Code Changes 判断为准。",
-        "shared/rules 与 shared/reference 的目录职责不同。",
-        "这里只描述边界，不再给出规则文件路径。",
-    ]
-
-    for sample in invalid_samples:
-        if not find_rule_backlinks(sample):
-            raise SystemExit(f"self-check failed to catch invalid sample: {sample}")
-
-    for sample in valid_samples:
-        if find_rule_backlinks(sample):
-            raise SystemExit(f"self-check falsely flagged valid sample: {sample}")
-
-
-assert_self_checks()
-
-violations = []
-for path in sorted((root / "shared" / "reference").rglob("*.md")):
-    text = path.read_text(encoding="utf-8", errors="ignore")
-    for lineno, line in enumerate(text.splitlines(), start=1):
-        matches = find_rule_backlinks(line)
-        if matches:
-            violations.append(f"{path}:{lineno}:{matches[0]}")
-
-if violations:
-    print("\n".join(violations), file=sys.stderr)
-    raise SystemExit(1)
+if (root / "shared" / "reference").exists():
+    raise SystemExit("Team must not keep shared/reference; Base owns runtime references")
+if (root / "shared" / "rules").exists():
+    raise SystemExit("Team must not keep shared/rules; Base owns runtime rules")
 PY
 
 echo "[PASS] reference graph hygiene"

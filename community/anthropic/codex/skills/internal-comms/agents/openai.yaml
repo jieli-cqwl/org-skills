@@ -1,4 +1,0 @@
-interface:
-  display_name: "Internal Comms"
-  short_description: "Write internal communications in company formats"
-  default_prompt: "Use $internal-comms to draft internal communications."

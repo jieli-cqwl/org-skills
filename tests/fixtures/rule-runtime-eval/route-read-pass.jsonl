@@ -1,3 +1,0 @@
-{"type":"item.completed","item":{"id":"command-read","type":"command_execution","command":"bash -lc 'cat __CODEX_HOME__/reference/协作判断.md'","exit_code":0,"status":"completed","aggregated_output":"route contract"}}
-{"type":"item.completed","item":{"id":"message-first","type":"agent_message","text":"first response"}}
-{"type":"item.completed","item":{"id":"message-final","type":"agent_message","text":"final response"}}

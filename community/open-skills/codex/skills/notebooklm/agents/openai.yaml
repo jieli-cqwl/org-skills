@@ -1,4 +1,0 @@
-interface:
-  display_name: "NotebookLM"
-  short_description: "Query Google NotebookLM notebooks through browser automation"
-  default_prompt: "Use $notebooklm to query or manage Google NotebookLM notebooks."

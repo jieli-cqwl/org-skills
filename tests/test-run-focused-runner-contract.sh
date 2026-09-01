@@ -87,8 +87,10 @@ assert_contains "bash $ROOT/tests/test-standard-chain-readiness-gate.sh" "$stand
 assert_not_contains "tests/test-product-manager-dogfood-e2e.sh" "$standard_chain_plan" "standard-chain plan"
 
 assert_contains "profile=install-runtime" "$install_runtime_plan" "install-runtime plan"
-assert_contains "bash $ROOT/tests/test-install-runtime-smoke.sh" "$install_runtime_plan" "install-runtime plan"
-assert_contains "bash $ROOT/tests/test-install-runtime.sh" "$install_runtime_plan" "install-runtime plan"
+assert_contains "bash $ROOT/tests/test-team-install-lifecycle.sh" "$install_runtime_plan" "install-runtime plan"
+assert_contains "bash $ROOT/tests/test-install-runtime-quick-canary.sh" "$install_runtime_plan" "install-runtime plan"
+assert_not_contains "tests/test-install-runtime.sh" "$install_runtime_plan" "install-runtime plan"
+assert_not_contains "tests/test-install-runtime-smoke.sh" "$install_runtime_plan" "install-runtime plan"
 
 if bash "$RUNNER" unknown --list >/tmp/org_run_focused_unknown.out 2>&1; then
   fail "unknown profile should fail"

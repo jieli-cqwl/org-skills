@@ -52,6 +52,7 @@ runner_source="$(<"$RUNNER")"
 
 assert_contains "tests/run-focused.sh" "$runner_source" "run-all focused runner syntax coverage"
 assert_contains "tests/test-run-focused-runner-contract.sh" "$runner_source" "run-all focused runner contract syntax coverage"
+assert_contains "tests/test-team-install-lifecycle.sh" "$runner_source" "run-all team install lifecycle syntax coverage"
 assert_contains "tests/test-product-director-team-pilot-contract.sh" "$runner_source" "run-all product-director team pilot syntax coverage"
 assert_contains "shared/skills/delivery-owner/scripts/completion_check.sh" "$runner_source" "run-all shell syntax coverage"
 assert_contains "shared/skills/delivery-owner/scripts/intake_preflight_check.sh" "$runner_source" "run-all shell syntax coverage"
@@ -116,6 +117,7 @@ release_steps="$(plan_count steps "$release_plan")"
 [ "$release_steps" -gt "$full_steps" ] || fail "release plan should add release-only checks beyond the full plan"
 [ "$quick_steps" -le 36 ] || fail "quick plan should stay below 36 canary steps"
 
+assert_contains "bash $ROOT/tests/test-team-install-lifecycle.sh" "$full_plan" "full plan"
 assert_contains "bash $ROOT/tests/test-install-core.sh --group basic" "$full_plan" "full plan"
 assert_contains "bash $ROOT/tests/test-install-core.sh --group runtime-noise" "$full_plan" "full plan"
 assert_contains "bash $ROOT/tests/test-install-core.sh --group runtime-idempotent" "$full_plan" "full plan"
@@ -130,26 +132,18 @@ assert_contains "bash $ROOT/tests/test-install-runtime-quick-canary.sh --group c
 assert_contains "bash $ROOT/tests/test-install-runtime-quick-canary.sh --group hook-checks" "$quick_plan" "quick plan"
 assert_contains "python3 $ROOT/tests/test-install-script-contract.py" "$quick_plan" "quick plan"
 assert_not_contains "test-install-runtime-smoke.sh" "$quick_plan" "quick plan"
+assert_not_contains "test-skill-pull" "$quick_plan" "quick plan"
+assert_not_contains "shared/assistant.md" "$quick_plan" "quick plan"
 assert_contains "bash $ROOT/tests/test-install-runtime-quick-canary.sh --group codex-install" "$full_plan" "full plan"
 assert_contains "bash $ROOT/tests/test-install-runtime-quick-canary.sh --group claude-hook-launcher" "$full_plan" "full plan"
 assert_contains "bash $ROOT/tests/test-install-runtime-quick-canary.sh --group hook-checks" "$full_plan" "full plan"
 assert_contains "python3 $ROOT/tests/test-install-script-contract.py" "$full_plan" "full plan"
 assert_contains "python3 $ROOT/tests/test-install-script-contract.py" "$release_plan" "release plan"
-assert_contains "bash $ROOT/tests/test-install-runtime-smoke.sh --group shape" "$full_plan" "full plan"
-assert_contains "bash $ROOT/tests/test-install-runtime-smoke.sh --group cache" "$full_plan" "full plan"
-assert_contains "bash $ROOT/tests/test-install-runtime-smoke.sh --group drift" "$full_plan" "full plan"
-assert_contains "bash $ROOT/tests/test-install-runtime-smoke.sh --group shape" "$release_plan" "release plan"
-assert_contains "bash $ROOT/tests/test-install-runtime-smoke.sh --group cache" "$release_plan" "release plan"
-assert_contains "bash $ROOT/tests/test-install-runtime-smoke.sh --group drift" "$release_plan" "release plan"
-assert_contains "bash $ROOT/tests/test-install-safety.sh --group backup-and-conflict" "$full_plan" "full plan"
-assert_contains "bash $ROOT/tests/test-install-safety.sh --group external-codex" "$full_plan" "full plan"
-assert_contains "bash $ROOT/tests/test-install-safety.sh --group external-claude" "$full_plan" "full plan"
-assert_contains "bash $ROOT/tests/test-install-safety.sh --group rollback" "$full_plan" "full plan"
-assert_contains "bash $ROOT/tests/test-install-safety.sh --group codex-hooks" "$full_plan" "full plan"
-assert_contains "bash $ROOT/tests/test-install-safety.sh --group state-cleanup" "$full_plan" "full plan"
-assert_contains "bash $ROOT/tests/test-install-safety.sh --group preserve-backup" "$full_plan" "full plan"
-assert_contains "bash $ROOT/tests/test-install-runtime.sh" "$full_plan" "full plan"
-assert_contains "bash $ROOT/tests/test-install-migration.sh" "$full_plan" "full plan"
+assert_not_contains "test-install-runtime-smoke.sh" "$full_plan" "full plan"
+assert_not_contains "test-install-safety.sh" "$full_plan" "full plan"
+assert_not_contains "test-install-runtime.sh" "$full_plan" "full plan"
+assert_not_contains "test-install-migration.sh" "$full_plan" "full plan"
+assert_not_contains "ownership-inventory" "$full_plan" "full plan"
 assert_contains "bash $ROOT/tests/test-standard-chain-readiness-gate.sh" "$full_plan" "full plan"
 assert_contains "bash $ROOT/tests/test-developer-effectiveness-review-evals.sh" "$full_plan" "full plan"
 assert_contains "bash $ROOT/tests/test-developer-runtime-proof-contract.sh" "$full_plan" "full plan"
@@ -199,6 +193,7 @@ assert_contains "bash $ROOT/tests/test-stage2-test-design-package.sh" "$full_pla
 assert_contains "bash $ROOT/tests/test-stage2-tech-lead-package.sh" "$full_plan" "full plan"
 
 for release_heavy_test in \
+  "tests/test-team-install-lifecycle.sh" \
   "tests/test-install-core.sh --group basic" \
   "tests/test-install-core.sh --group runtime-noise" \
   "tests/test-install-core.sh --group runtime-idempotent" \
@@ -208,17 +203,6 @@ for release_heavy_test in \
   "tests/test-install-core.sh --group codex-agent-config-file" \
   "tests/test-install-core.sh --group codex-agent-file-contracts" \
   "tests/test-install-core.sh --group codex-local-edit" \
-  "tests/test-install-safety.sh --group backup-and-conflict" \
-  "tests/test-install-safety.sh --group external-codex" \
-  "tests/test-install-safety.sh --group external-claude" \
-  "tests/test-install-safety.sh --group rollback" \
-  "tests/test-install-safety.sh --group codex-hooks" \
-  "tests/test-install-safety.sh --group state-cleanup" \
-  "tests/test-install-safety.sh --group preserve-backup" \
-  "tests/test-install-runtime.sh" \
-  "tests/test-install-migration.sh" \
-  "tests/test-install-retired-skill-cleanup.sh" \
-  "tests/test-runtime-integrity.sh" \
   "tests/test-platform-runtime-noise.sh" \
   "tests/test-codex-skill-adapter.sh"
 do
@@ -252,8 +236,14 @@ import sys
 
 plan = json.loads(sys.argv[1])
 for step in plan["steps"]:
-    if step.get("id") == "install-runtime":
-        raise SystemExit("install-runtime must not be part of the quick plan")
+    if step.get("id") in {
+        "install-runtime",
+        "rule-runtime-team-readiness-pack",
+        "ownership-inventory",
+        "skill-pull-contract",
+        "skill-pull-scripts",
+    }:
+        raise SystemExit(f"{step.get('id')} must not be part of the quick plan")
 PY
 
 full_json="$(bash "$RUNNER" --full --list --format=json)"
@@ -263,9 +253,13 @@ import sys
 
 plan = json.loads(sys.argv[1])
 steps = {step.get("id"): step for step in plan["steps"]}
-timeout = steps["install-runtime"].get("timeout_sec")
+timeout = steps["team-install-lifecycle"].get("timeout_sec")
 if not isinstance(timeout, int) or timeout < 900:
-    raise SystemExit(f"install-runtime timeout_sec must be at least 900, got {timeout}")
+    raise SystemExit(f"team-install-lifecycle timeout_sec must be at least 900, got {timeout}")
+if "install-runtime" in steps:
+    raise SystemExit("monolith install-runtime must not remain in the full plan")
+if "ownership-inventory" in steps:
+    raise SystemExit("ownership-inventory must not remain in the full plan")
 
 timeout = steps["design-skill-governance-redesign"].get("timeout_sec")
 if timeout != 300:

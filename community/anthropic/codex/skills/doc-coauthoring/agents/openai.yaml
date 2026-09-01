@@ -1,4 +1,0 @@
-interface:
-  display_name: "Doc Coauthoring"
-  short_description: "Structured workflow for co-authoring documents"
-  default_prompt: "Use $doc-coauthoring to co-author structured documentation."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "XLSX"
-  short_description: "Create, inspect, and edit spreadsheet files"
-  default_prompt: "Use $xlsx to create, inspect, or edit spreadsheet files."

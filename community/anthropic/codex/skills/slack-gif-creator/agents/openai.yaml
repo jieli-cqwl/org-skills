@@ -1,4 +1,0 @@
-interface:
-  display_name: "Slack GIF Creator"
-  short_description: "Create animated GIFs optimized for Slack"
-  default_prompt: "Use $slack-gif-creator to create a Slack-ready GIF."

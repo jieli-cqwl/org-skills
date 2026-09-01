@@ -33,97 +33,38 @@ esac
 install_test_init
 
 if [ "$GROUP" = "all" ] || [ "$GROUP" = "codex-install" ]; then
-  install_test_case_start "runtime-quick-canary: codex install exposes managed runtime entry"
+  install_test_case_start "runtime-quick-canary: Base then Team Codex payload"
   home_dir="$(install_test_new_home runtime-quick-canary)"
-  codex_skills_dir="$home_dir/.agents/skills"
-  install_test_run_install_fake_openspec "$home_dir" "$(install_test_log_path runtime-quick-canary-install)" --target codex --check quick
-
-  install_test_assert_file_exists "$home_dir/.codex/AGENTS.md" "codex runtime should include AGENTS.md"
-  install_test_assert_file_exists "$home_dir/.codex/rules/completion-claims.md" "codex runtime should include rules"
-  install_test_assert_file_exists "$home_dir/.codex/reference/测试规范.md" "codex runtime should include reference docs"
-  install_test_assert_file_exists "$codex_skills_dir/product-manager/SKILL.md" "codex runtime should install managed user skills"
+  install_test_run_base "$home_dir" "$(install_test_log_path runtime-quick-canary-base)" --target all
+  install_test_run_install "$home_dir" "$(install_test_log_path runtime-quick-canary-install)" --target all
+  install_test_assert_file_exists "$home_dir/.codex/AGENTS.md" "Base Codex assistant remains after Team install"
+  install_test_assert_file_exists "$home_dir/.codex/rules/completion-claims.md" "Base rules remain after Team install"
+  install_test_assert_file_exists "$home_dir/.codex/reference/测试规范.md" "Base reference remains after Team install"
+  install_test_assert_file_exists "$home_dir/.agents/skills/product-director/SKILL.md" "Team Codex skill present"
+  install_test_assert_path_absent "$home_dir/.agents/skills/skill-creator" "Daily skill-creator absent"
+  install_test_assert_path_absent "$home_dir/.agents/skills/brainstorming" "Superpowers skill absent"
+  install_test_assert_path_absent "$home_dir/.agents/skills/skill-pull" "skill-pull absent"
   install_test_assert_file_exists "$home_dir/.codex/hooks.json" "codex runtime should include hooks.json"
-  install_test_assert_file_not_contains "$home_dir/.codex/hooks.json" '"command": "python3 ' "codex Python hooks should pin the installer Python executable"
-  install_test_assert_file_contains "$home_dir/.codex/hooks.json" "\"command\": \"$(command -v python3) $home_dir/.codex/hooks/managed/context_contract_validator.py\"" "codex context hook should use installer Python executable"
-  install_test_assert_file_not_contains "$home_dir/.codex/hooks.json" "$home_dir/.codex/hooks/managed/codex_context_continuity.py" "codex context continuity should not install by default"
-  install_test_case_pass "runtime-quick-canary: codex install exposes managed runtime entry"
-fi
-
-if [ "$GROUP" = "all" ] || [ "$GROUP" = "codex-install" ]; then
-  install_test_case_start "runtime-quick-canary: remove retired codex context continuity runtime"
-  home_dir="$(install_test_new_home runtime-quick-canary-context-continuity)"
-  mkdir -p "$home_dir/.codex/hooks/managed"
-  mkdir -p "$home_dir/.codex/hooks/state/context-continuity"
-  mkdir -p "$home_dir/.org-skills-state/codex"
-  printf 'retired hook\n' >"$home_dir/.codex/hooks/managed/codex_context_continuity.py"
-  printf '{}\n' >"$home_dir/.codex/hooks/state/context-continuity/stale.json"
-  printf 'enabled\n' >"$home_dir/.org-skills-state/codex/context-continuity-enabled"
-  cat >"$home_dir/.codex/hooks.json" <<JSON
-{
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 $home_dir/.codex/hooks/managed/codex_context_continuity.py --event Stop"
-          }
-        ]
-      }
-    ]
-  }
-}
-JSON
-  install_test_run_install_fake_openspec "$home_dir" "$(install_test_log_path runtime-quick-canary-context-continuity-install)" --target codex --force --check quick
-  install_test_assert_path_absent "$home_dir/.codex/hooks/managed/codex_context_continuity.py" "retired context continuity script should be removed"
-  install_test_assert_path_absent "$home_dir/.codex/hooks/managed/codex_context_model.py" "retired context model should be removed"
-  install_test_assert_path_absent "$home_dir/.codex/hooks/managed/codex_context_store.py" "retired context store should be removed"
-  install_test_assert_path_absent "$home_dir/.codex/hooks/state/context-continuity" "retired context continuity state should be removed"
-  install_test_assert_path_absent "$home_dir/.org-skills-state/codex/context-continuity-enabled" "retired context continuity opt-in marker should be removed"
-  install_test_assert_file_not_contains "$home_dir/.codex/hooks.json" "codex_context_continuity.py" "retired context continuity hooks should not be registered"
-  install_test_case_pass "runtime-quick-canary: remove retired codex context continuity runtime"
+  install_test_assert_file_contains "$home_dir/.codex/hooks.json" "context_contract_validator.py" "codex context hook should be registered"
+  install_test_assert_path_absent "$home_dir/.org-skills-state" "legacy state unused"
+  install_test_case_pass "runtime-quick-canary: Base then Team Codex payload"
 fi
 
 if [ "$GROUP" = "all" ] || [ "$GROUP" = "claude-hook-launcher" ]; then
-  install_test_case_start "runtime-quick-canary: claude install migrates python hook launcher"
+  install_test_case_start "runtime-quick-canary: Claude Team hooks and payload"
   home_dir="$(install_test_new_home runtime-quick-canary-claude-hook-launcher)"
-  cat >"$home_dir/.claude/settings.json" <<'JSON'
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 $HOME/.claude/hooks/managed/context_contract_validator.py",
-            "timeout": 30
-          }
-        ]
-      }
-    ]
-  }
-}
-JSON
-  install_test_run_install_fake_openspec "$home_dir" "$(install_test_log_path runtime-quick-canary-claude-hook-launcher-install)" --target claude --check quick
-  install_test_assert_file_not_contains "$home_dir/.claude/settings.json" "\"command\": \"python3 \$HOME/.claude/hooks/managed/context_contract_validator.py\"" "claude install should remove legacy bare python context hook"
-  install_test_assert_file_contains "$home_dir/.claude/settings.json" "\"command\": \"$(command -v python3) \$HOME/.claude/hooks/managed/context_contract_validator.py\"" "claude context hook should use installer Python executable"
-  install_test_case_pass "runtime-quick-canary: claude install migrates python hook launcher"
+  install_test_run_base "$home_dir" "$(install_test_log_path runtime-quick-canary-claude-base)" --target claude
+  install_test_run_install "$home_dir" "$(install_test_log_path runtime-quick-canary-claude-hook-launcher-install)" --target claude
+  install_test_assert_file_exists "$home_dir/.claude/skills/product-director/SKILL.md" "Team Claude skill present"
+  install_test_assert_path_absent "$home_dir/.claude/skills/skill-creator" "Daily skill-creator absent"
+  install_test_assert_path_absent "$home_dir/.claude/skills/brainstorming" "Superpowers skill absent"
+  install_test_assert_file_exists "$home_dir/.claude/hooks/post_compact.sh" "Team post_compact hook present"
+  install_test_assert_file_contains "$home_dir/.claude/settings.json" "context_contract_validator.py" "claude context hook should be registered"
+  install_test_assert_file_exists "$home_dir/.claude/CLAUDE.md" "Base assistant remains after Team install"
+  install_test_case_pass "runtime-quick-canary: Claude Team hooks and payload"
 fi
 
 if [ "$GROUP" = "all" ] || [ "$GROUP" = "hook-checks" ]; then
-  install_test_case_start "runtime-quick-canary: rejects invalid python hook launcher"
-  home_dir="$(install_test_new_home runtime-quick-canary-invalid-python-launcher)"
-  invalid_launcher="$home_dir/missing python3"
-  invalid_log="$(install_test_log_path runtime-quick-canary-invalid-python-launcher-install)"
-  INSTALL_TEST_CURRENT_LOG="$invalid_log"
-  if run_with_fake_openspec "$home_dir" env HOME="$home_dir" ORG_STATE_ROOT="$(install_test_state_root "$home_dir")" ORG_SKIP_CONTRACT_VALIDATION=1 ORG_SKIP_CODEX_HOOK_TRUST_AUDIT=1 ORG_HOOK_PYTHON="$invalid_launcher" \
-    bash "$ROOT/install.sh" --target codex --check quick >"$invalid_log" 2>&1; then
-    install_test_fail "install should reject invalid ORG_HOOK_PYTHON"
-  fi
-  install_test_assert_file_contains "$invalid_log" "Python hook launcher" "invalid python launcher failure should name the hook launcher"
-  install_test_case_pass "runtime-quick-canary: rejects invalid python hook launcher"
-
   install_test_case_start "runtime-quick-canary: task verify ruff lint is scoped to changed files"
   workspace="$INSTALL_TEST_TMP_ROOT/task-verify-scope-workspace"
   mkdir -p "$workspace/vendor"

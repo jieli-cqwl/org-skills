@@ -2,9 +2,6 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# shellcheck source=tests/lib/test-env.sh
-. "$ROOT/tests/lib/test-env.sh"
-ensure_test_rg
 
 fail() {
   printf '[FAIL] %s\n' "$*" >&2
@@ -25,7 +22,7 @@ check_doc_shared_refs() {
       [ -f "$ROOT/$ref" ] || fail "$source_file 引用了缺失共享文档: $ref"
     done < <(
       {
-        grep -ohE '\]\([^)]*shared/(reference|protocols|skills/[^/]+/references)/[^)#]+\.md' "$source_file" || true
+        grep -ohE '\]\([^)]*shared/(protocols|skills/[^/]+/references)/[^)#]+\.md' "$source_file" || true
       } | sed -E 's/^.*shared/shared/' | sort -u
     )
   done < <(find "$docs_dir" -type f -name '*.md' ! -path '*/archive/*' | sort)

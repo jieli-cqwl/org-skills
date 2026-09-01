@@ -2,35 +2,19 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# shellcheck source=tests/lib/test-env.sh
-. "$ROOT/tests/lib/test-env.sh"
+# shellcheck source=tests/lib/install-test-env.sh
+. "$ROOT/tests/lib/install-test-env.sh"
 ensure_test_rg
-TMP_HOME="$(mktemp -d)"
-STATE_ROOT="$TMP_HOME/.org-skills-state"
+install_test_init
+TMP_HOME="$(install_test_new_home platform-noise)"
 CODEX_SKILLS_DIR="$TMP_HOME/.agents/skills"
 
-cleanup() {
-  rm -rf "$TMP_HOME"
-}
-trap cleanup EXIT
-
 fail() {
-  printf '[FAIL] %s\n' "$*" >&2
-  exit 1
+  install_test_fail "$*"
 }
 
-mkdir -p "$TMP_HOME/.claude" "$TMP_HOME/.codex"
-cat > "$TMP_HOME/.claude/settings.json" <<'JSON'
-{"hooks":{}}
-JSON
-cat > "$TMP_HOME/.codex/config.toml" <<'TOML'
-model = "gpt-5.4"
-TOML
-
-run_with_fake_openspec "$TMP_HOME" env HOME="$TMP_HOME" ORG_STATE_ROOT="$STATE_ROOT" ORG_SKIP_CONTRACT_VALIDATION=1 ORG_SKIP_CODEX_HOOK_TRUST_AUDIT=1 bash "$ROOT/install.sh" --target all --force --check quick >/tmp/org_platform_noise_install.out 2>&1 || {
-  cat /tmp/org_platform_noise_install.out >&2
-  fail "install failed"
-}
+install_test_run_base "$TMP_HOME" "$(install_test_log_path platform-noise-base)" --target all
+install_test_run_install "$TMP_HOME" "$(install_test_log_path platform-noise-team)" --target all
 
 grep -Fxq '# CLAUDE.md' "$TMP_HOME/.claude/CLAUDE.md" || fail "claude entry doc title should be # CLAUDE.md"
 
@@ -93,22 +77,6 @@ skills_dir = Path(sys.argv[2])
 max_total_chars = 10000
 max_single_chars = 220
 max_first_party_source_chars = 180
-official_superpowers = {
-    "brainstorming",
-    "dispatching-parallel-agents",
-    "executing-plans",
-    "finishing-a-development-branch",
-    "receiving-code-review",
-    "requesting-code-review",
-    "subagent-driven-development",
-    "systematic-debugging",
-    "test-driven-development",
-    "using-git-worktrees",
-    "using-superpowers",
-    "verification-before-completion",
-    "writing-plans",
-    "writing-skills",
-}
 
 
 def frontmatter(text: str) -> str | None:
@@ -142,9 +110,6 @@ rows = []
 for skill_file in skills_dir.rglob("SKILL.md"):
     front = frontmatter(skill_file.read_text(encoding="utf-8"))
     if front is None:
-        continue
-    root_name = skill_file.relative_to(skills_dir).parts[0]
-    if root_name in official_superpowers:
         continue
     description = re.sub(r"\s+", " ", description_from(front)).strip()
     rows.append((len(description), skill_file.relative_to(skills_dir).as_posix()))
@@ -295,7 +260,7 @@ if rg -n '\{\{SKILLS_HOME\}\}|\$HOME/\.codex/skills' \
   fail "runtime first-party skill docs should not keep unresolved skill-root placeholders or legacy Codex skill paths"
 fi
 
-test ! -d "$ROOT/community/persona" || fail "retired persona source tree should not remain in runtime sources"
+test ! -e "$ROOT/community" || fail "community vendor tree must not remain in Team"
 
 if rg -n \
   --glob '!**/evals/**' \

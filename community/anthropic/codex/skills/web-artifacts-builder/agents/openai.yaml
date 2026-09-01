@@ -1,4 +1,0 @@
-interface:
-  display_name: "Web Artifacts Builder"
-  short_description: "Build complex HTML artifacts with modern web UI"
-  default_prompt: "Use $web-artifacts-builder to build a complex web artifact."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Claude API"
-  short_description: "Build Claude API, SDK, and Managed Agents apps"
-  default_prompt: "Use $claude-api to build, debug, or optimize Claude API, SDK, or Managed Agents work."

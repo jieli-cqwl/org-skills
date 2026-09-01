@@ -1,4 +1,0 @@
-interface:
-  display_name: "Humanizer zh"
-  short_description: "Chinese text editing guidance for reducing AI-writing traces"
-  default_prompt: "Use $humanizer-zh to edit Chinese text so it sounds more natural."

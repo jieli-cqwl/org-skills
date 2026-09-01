@@ -123,6 +123,20 @@
       "timeout_sec": 60
     },
     {
+      "id": "team-install-lifecycle",
+      "command": [
+        "bash",
+        "tests/test-team-install-lifecycle.sh"
+      ],
+      "area": "install-runtime",
+      "tier": "full",
+      "tags": [
+        "install-heavy"
+      ],
+      "parallel_safe": false,
+      "timeout_sec": 900
+    },
+    {
       "id": "install-core-basic",
       "command": [
         "bash",
@@ -345,233 +359,6 @@
       "timeout_sec": 60
     },
     {
-      "id": "install-runtime-smoke-shape",
-      "command": [
-        "bash",
-        "tests/test-install-runtime-smoke.sh",
-        "--group",
-        "shape"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 420
-    },
-    {
-      "id": "install-runtime-smoke-cache",
-      "command": [
-        "bash",
-        "tests/test-install-runtime-smoke.sh",
-        "--group",
-        "cache"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 180
-    },
-    {
-      "id": "install-runtime-smoke-drift",
-      "command": [
-        "bash",
-        "tests/test-install-runtime-smoke.sh",
-        "--group",
-        "drift"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 180
-    },
-    {
-      "id": "install-safety-backup-and-conflict",
-      "command": [
-        "bash",
-        "tests/test-install-safety.sh",
-        "--group",
-        "backup-and-conflict"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 480
-    },
-    {
-      "id": "install-safety-external-codex",
-      "command": [
-        "bash",
-        "tests/test-install-safety.sh",
-        "--group",
-        "external-codex"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 480
-    },
-    {
-      "id": "install-safety-external-claude",
-      "command": [
-        "bash",
-        "tests/test-install-safety.sh",
-        "--group",
-        "external-claude"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 480
-    },
-    {
-      "id": "install-safety-rollback",
-      "command": [
-        "bash",
-        "tests/test-install-safety.sh",
-        "--group",
-        "rollback"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 480
-    },
-    {
-      "id": "install-safety-codex-hooks",
-      "command": [
-        "bash",
-        "tests/test-install-safety.sh",
-        "--group",
-        "codex-hooks"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 480
-    },
-    {
-      "id": "install-safety-state-cleanup",
-      "command": [
-        "bash",
-        "tests/test-install-safety.sh",
-        "--group",
-        "state-cleanup"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 480
-    },
-    {
-      "id": "install-safety-preserve-backup",
-      "command": [
-        "bash",
-        "tests/test-install-safety.sh",
-        "--group",
-        "preserve-backup"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 480
-    },
-    {
-      "id": "install-runtime",
-      "command": [
-        "bash",
-        "tests/test-install-runtime.sh"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 900
-    },
-    {
-      "id": "install-migration",
-      "command": [
-        "bash",
-        "tests/test-install-migration.sh"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy",
-        "migration"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 480
-    },
-    {
-      "id": "install-retired-skill-cleanup",
-      "command": [
-        "bash",
-        "tests/test-install-retired-skill-cleanup.sh"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "install-heavy"
-      ],
-      "parallel_safe": false,
-      "timeout_sec": 480
-    },
-    {
-      "id": "runtime-contract-catalog",
-      "command": [
-        "bash",
-        "tests/test-runtime-contract-catalog.sh"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [],
-      "parallel_safe": false,
-      "timeout_sec": 180
-    },
-    {
-      "id": "runtime-integrity",
-      "command": [
-        "bash",
-        "tests/test-runtime-integrity.sh"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [],
-      "parallel_safe": false,
-      "timeout_sec": 180
-    },
-    {
       "id": "runtime-reference-activation",
       "command": [
         "bash",
@@ -582,52 +369,6 @@
       "tags": [],
       "parallel_safe": false,
       "timeout_sec": 180
-    },
-    {
-      "id": "rule-runtime-team-readiness-pack",
-      "command": [
-        "bash",
-        "tests/test-rule-runtime-team-readiness-pack.sh"
-      ],
-      "area": "install-runtime",
-      "tier": "quick",
-      "tags": [
-        "runtime-surface",
-        "team-readiness"
-      ],
-      "parallel_safe": true,
-      "timeout_sec": 60
-    },
-    {
-      "id": "rule-runtime-eval-contracts",
-      "command": [
-        "bash",
-        "tests/test-rule-runtime-eval-contracts.sh"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "runtime-surface",
-        "eval-contract"
-      ],
-      "parallel_safe": true,
-      "timeout_sec": 30
-    },
-    {
-      "id": "rule-runtime-eval-runner",
-      "command": [
-        "bash",
-        "tests/test-rule-runtime-eval-runner.sh"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "runtime-surface",
-        "eval-contract",
-        "full-only"
-      ],
-      "parallel_safe": true,
-      "timeout_sec": 300
     },
     {
       "id": "codex-hook-trust-audit",
@@ -1471,60 +1212,6 @@
       "tier": "full",
       "tags": [
         "context"
-      ],
-      "parallel_safe": true,
-      "timeout_sec": 180
-    },
-    {
-      "id": "community-tools",
-      "command": [
-        "bash",
-        "tests/test-community-tools.sh"
-      ],
-      "area": "community",
-      "tier": "full",
-      "tags": [
-        "full-only"
-      ],
-      "parallel_safe": true,
-      "timeout_sec": 180
-    },
-    {
-      "id": "anthropic-skill-sync-adapter-contract",
-      "command": [
-        "bash",
-        "tests/test-anthropic-skill-sync-adapter-contract.sh"
-      ],
-      "area": "community",
-      "tier": "full",
-      "tags": [],
-      "parallel_safe": true,
-      "timeout_sec": 180
-    },
-    {
-      "id": "superpowers-upstream-fidelity",
-      "command": [
-        "bash",
-        "tests/test-superpowers-upstream-fidelity.sh"
-      ],
-      "area": "community",
-      "tier": "full",
-      "tags": [
-        "full-only"
-      ],
-      "parallel_safe": true,
-      "timeout_sec": 300
-    },
-    {
-      "id": "superpowers-boundary",
-      "command": [
-        "bash",
-        "tests/test-superpowers-boundary.sh"
-      ],
-      "area": "community",
-      "tier": "full",
-      "tags": [
-        "full-only"
       ],
       "parallel_safe": true,
       "timeout_sec": 180
@@ -2499,32 +2186,6 @@
       "timeout_sec": 180
     },
     {
-      "id": "skill-pull-contract",
-      "command": [
-        "bash",
-        "tests/test-skill-pull-contract.sh"
-      ],
-      "area": "other",
-      "tier": "full",
-      "tags": [],
-      "parallel_safe": true,
-      "timeout_sec": 180
-    },
-    {
-      "id": "skill-pull-scripts",
-      "command": [
-        "python3",
-        "tests/test-skill-pull-scripts.py"
-      ],
-      "area": "other",
-      "tier": "full",
-      "tags": [
-        "python"
-      ],
-      "parallel_safe": true,
-      "timeout_sec": 180
-    },
-    {
       "id": "feishu-docs-skill-contract",
       "command": [
         "bash",
@@ -2683,21 +2344,6 @@
       "tags": [
         "docs",
         "python"
-      ],
-      "parallel_safe": true,
-      "timeout_sec": 60
-    },
-    {
-      "id": "ownership-inventory",
-      "command": [
-        "python3",
-        "tests/test-ownership-inventory.py"
-      ],
-      "area": "install-runtime",
-      "tier": "full",
-      "tags": [
-        "python",
-        "split"
       ],
       "parallel_safe": true,
       "timeout_sec": 60

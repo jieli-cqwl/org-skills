@@ -1,4 +1,0 @@
-interface:
-  display_name: "MCP Builder"
-  short_description: "MCP Server development and tool definition"
-  default_prompt: "Use $mcp-builder to build an MCP server for [service]."

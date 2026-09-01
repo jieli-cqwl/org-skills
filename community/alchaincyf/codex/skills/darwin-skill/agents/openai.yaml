@@ -1,4 +1,0 @@
-interface:
-  display_name: "Darwin Skill"
-  short_description: "Autonomous optimizer for SKILL.md quality"
-  default_prompt: "Use $darwin-skill to evaluate or optimize selected SKILL.md files."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "BBBrowser"
-  short_description: "Browser automation and authenticated web information extraction"
-  default_prompt: "Use $bb-browser to operate a logged-in browser or extract web information."

@@ -1,2 +1,0 @@
-{"type":"item.completed","item":{"id":"command-read","type":"command_execution","command":"cat __CODEX_HOME__/reference/协作判断.md","exit_code":0,"status":"completed","aggregated_output":"route contract"}}
-{"type":"unexpected.event","payload":{"value":"unknown"}}

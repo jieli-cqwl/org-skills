@@ -1,4 +1,0 @@
-interface:
-  display_name: "Brand Guidelines"
-  short_description: "Apply Anthropic brand colors and typography"
-  default_prompt: "Use $brand-guidelines to apply Anthropic brand styling."

@@ -29,14 +29,24 @@ line_count="$(wc -l <"$AGENTS_ENTRY" | tr -d ' ')"
 
 head -n 1 "$AGENTS_ENTRY" | grep -Fx '# AGENTS.md' >/dev/null \
   || fail "AGENTS.md should be the shared project instruction entry"
-grep -Eq 'shared/rules/\*\.md' "$AGENTS_ENTRY" \
-  || fail "AGENTS.md should define shared/rules distribution boundary"
-grep -Eq 'shared/assistant\.md' "$AGENTS_ENTRY" \
-  || fail "AGENTS.md should keep project memory out of shared/assistant.md"
-grep -Eq 'community/superpowers/skills' "$AGENTS_ENTRY" \
-  || fail "AGENTS.md should protect the Superpowers mirror boundary"
+grep -Eq 'bash tests/run-all\.sh --quick' "$AGENTS_ENTRY" \
+  || fail "AGENTS.md should keep the Team quick gate command"
+grep -Eq 'bash install\.sh --target all --dry-run' "$AGENTS_ENTRY" \
+  || fail "AGENTS.md should keep the Team install dry-run command"
+grep -Eq 'team-skills' "$AGENTS_ENTRY" \
+  || fail "AGENTS.md should name team-skills ownership"
+grep -Eq 'Daily' "$AGENTS_ENTRY" \
+  || fail "AGENTS.md should say Superpowers lives in Daily"
 grep -Eq 'tools/community/check_test_signal_assertions\.py' "$AGENTS_ENTRY" \
   || fail "AGENTS.md should point at the low-signal assertion checker"
+grep -Eq '测试断言边界' "$AGENTS_ENTRY" \
+  || fail "AGENTS.md should keep the test-signal assertion boundary"
+! grep -Eq 'shared/assistant\.md' "$AGENTS_ENTRY" \
+  || fail "AGENTS.md should not point at moved shared/assistant.md"
+! grep -Fq 'shared/rules/*.md' "$AGENTS_ENTRY" \
+  || fail "AGENTS.md should not point at moved shared/rules"
+! grep -Fq 'community/superpowers/skills' "$AGENTS_ENTRY" \
+  || fail "AGENTS.md should not point at moved Superpowers mirror"
 ! grep -Eq 'tests/fixtures/test-assertion-boundary/low-signal-prose-assertions\.baseline' "$AGENTS_ENTRY" \
   || fail "AGENTS.md should not document a low-signal assertion baseline"
 ! grep -Eq '只约束开发本仓' "$AGENTS_ENTRY" \

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Algorithmic Art"
-  short_description: "Generative art with p5.js and seeded randomness"
-  default_prompt: "Use $algorithmic-art to create original algorithmic art with code."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Agent Reach"
-  short_description: "Multi-platform web, social, video, and code search guidance"
-  default_prompt: "Use $agent-reach to search, read, or interact with supported web platforms."

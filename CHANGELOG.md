@@ -1,19 +1,17 @@
 # Changelog
 
+## Unreleased
+- 收缩为本仓 `team-skills` 所有权：已迁出的 Base / Daily / Personal 源树从 HEAD 删除。本仓不再安装 Superpowers、Anthropic 或其他 community Skills；Team 安装只写 Team 资源并要求同一 target 上的 Base。
+
 ## 1.2.4
-- 新增 `nextlevelbuilder/ui-ux-pro-max-skill` vendor 源与安装层接入，`ui-ux-pro-max` 安装后按 manual-only 方式供 Claude / Codex 手动触发
+- 以下条目记录拆仓前的 monolith 工作，不描述当前 Team 仓库的安装面。
 - 修复 Codex 安装器注入的 completion gate 运行说明，避免把 `completion_check.sh` 误写成 fresh proving command 并诱导下游裸跑脚本、暴露内部 gate 细节
 - 修复 `new-skills` 参考文档对 gate 脚本的错误心智模型，明确 `completion_check.sh` 只允许 runtime hook 或带 payload 的内部排查调用
 - 收口 `codex_stop_dispatch.py` 的失败原因脱敏逻辑，避免将 `hook payload`、`session_id`、`transcript_path` 等内部上下文原样暴露到用户可见面
-- 新增 `openspec/designs/2026-03-28-superpowers-openspec-best-practice-draft.md`，沉淀 `superpowers + OpenSpec` 最佳实践设计草稿
-- 系统性修正 selected `community/superpowers` 中文 runtime 的误译、错译和术语污染，恢复 `skill id`、命令、路径、代码与术语缩写的英文保真
-- 强化 `tools/community/sync_canonical_from_upstream.py` 的本地化保护边界，补齐来源头再生、`vs.` / `superpowers:*` / 大写缩写保护，以及嵌套 fenced code block 保护
-- 新增 `tests/test-community-tools.sh` 回归用例，阻断来源头丢失、已知脏词回归和翻译污染再次出现
-- 更新仓库规则与发布入口文档，明确 `community/superpowers` 的中文 runtime 策略和扩面约束
-- 合并并清理运行边界与文档结构，收口 `superpowers` / `small-chain` / OpenSpec 的职责边界
-- 强化 Codex runtime probe，修复默认暴露面与 skill 解析的误判逻辑，并补齐 `community/superpowers` 边界门禁
-- 恢复安装与 full check 依赖的活跃发布/边界文档，重新打通 `install.sh --target all --force --merge-hooks --check full` 全链路验收
-- 固化 `3056999` 运行时安装链路验收锚点：Claude Code / Codex 均安装 `context_contract_validator.py` 托管 hook，入口文档、hook registry 与运行时文件已同步，验收命令为 `bash tests/run-all.sh --quick` 与 `bash install.sh --target all --check quick`
+- 新增 `openspec/designs/2026-03-28-superpowers-openspec-best-practice-draft.md`，沉淀设计草稿
+- 合并并清理运行边界与文档结构，收口 `small-chain` / OpenSpec 的职责边界
+- 强化 Codex runtime probe，修复默认暴露面与 skill 解析的误判逻辑
+- 固化 `3056999` 运行时安装链路验收锚点：Claude Code / Codex 均安装 `context_contract_validator.py` 托管 hook；验收命令为 `bash tests/run-all.sh --quick`
 
 ## 1.2.3
 - 收口 `/project-manager` Phase 3 强门禁矩阵，新增 `phase3-grade-matrix.sh` 作为唯一可执行规则源

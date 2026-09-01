@@ -1,4 +1,0 @@
-interface:
-  display_name: "Theme Factory"
-  short_description: "Apply or generate themes for visual artifacts"
-  default_prompt: "Use $theme-factory to apply or create a visual theme."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "PPTX"
-  short_description: "Create, inspect, and edit PowerPoint decks"
-  default_prompt: "Use $pptx to create, inspect, or edit presentation decks."

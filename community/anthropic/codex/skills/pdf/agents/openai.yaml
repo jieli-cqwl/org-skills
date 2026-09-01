@@ -1,4 +1,0 @@
-interface:
-  display_name: "PDF"
-  short_description: "Create, edit, extract, and process PDF files"
-  default_prompt: "Use $pdf to create, inspect, or process PDF files."
