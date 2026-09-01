@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- 物理 GitHub 仓从 `org-claude-skills` 改名为 `org-skills`。`repo_id` 仍是 `team-skills`。旧 URL 由 GitHub redirect。
 - 收缩为本仓 `team-skills` 所有权：已迁出的 Base / Daily / Personal 源树从 HEAD 删除。本仓不再安装 Superpowers、Anthropic 或其他 community Skills；Team 安装只写 Team 资源并要求同一 target 上的 Base。验收命令为 `bash tests/run-all.sh --quick` 与 `bash install.sh --target all --dry-run`。
 
 ## 1.2.4

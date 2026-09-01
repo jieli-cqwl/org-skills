@@ -98,6 +98,9 @@ def _classify_runtime(home: Path) -> list[Action]:
             if named is not None:
                 record(child, ActionClass(named), f"skill inventory:{child.name}")
                 continue
+            if child.name in inventory.SKILL_ROOT_SUPPORT_NAMES:
+                record(child, ActionClass.REMOVE_OLD_ONLY, "misplaced team support dir")
+                continue
             if str(child) in claimed:
                 record(child, ActionClass.CONFLICT, "unmapped legacy-manifest path")
                 continue

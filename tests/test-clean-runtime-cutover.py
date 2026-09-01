@@ -171,8 +171,17 @@ class ActionPlanTests(unittest.TestCase):
         by_path = {a.path: a.cls for a in plan.actions}
         self.assertEqual(by_path[str(home / ".claude/shared/skills")], ActionClass.REMOVE_OLD_ONLY)
         self.assertEqual(by_path[str(home / ".codex/shared/skills")], ActionClass.REMOVE_OLD_ONLY)
-        self.assertNotIn(str(home / ".claude/skills/lib"), by_path)
-        self.assertNotIn(str(home / ".codex/skills/lib"), by_path)
+
+    def test_skill_root_lib_is_remove_old_only_not_preserve(self) -> None:
+        home = self._home()
+        for rel in (".claude/skills/lib", ".agents/skills/lib"):
+            lib = home / rel
+            lib.mkdir(parents=True)
+            (lib / "script-common.sh").write_text("old-team-lib\n", encoding="utf-8")
+        plan = build_action_plan(home, pre_split_tag="pre-split-2026-08-31")
+        by_path = {a.path: a.cls for a in plan.actions}
+        self.assertEqual(by_path[str(home / ".claude/skills/lib")], ActionClass.REMOVE_OLD_ONLY)
+        self.assertEqual(by_path[str(home / ".agents/skills/lib")], ActionClass.REMOVE_OLD_ONLY)
 
 
 class ApplyActionPlanTests(unittest.TestCase):

@@ -163,6 +163,8 @@ BASE_RUNTIME_PATHS = (
 )
 
 SKILL_ROOTS = (Path(".claude/skills"), Path(".agents/skills"))
+# Copied Team support that landed under skills/ instead of shared/skills/.
+SKILL_ROOT_SUPPORT_NAMES = frozenset({"lib"})
 HOOK_ROOTS = (Path(".claude/hooks"), Path(".codex/hooks"))
 TEAM_SUPPORT_TREES = (Path(".claude/shared/skills"), Path(".codex/shared/skills"))
 STATE_DIRNAME = ".org-skills-state"

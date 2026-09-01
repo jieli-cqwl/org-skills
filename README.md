@@ -1,6 +1,6 @@
 # team-skills
 
-Team first-party Skills、hooks、agents、protocols 与 standard-chain 合同。本仓 `repo_id` 是 `team-skills`。物理 remote 仍是 `org-claude-skills`，直到后续单独改名。
+Team first-party Skills、hooks、agents、protocols 与 standard-chain 合同。本仓 `repo_id` 是 `team-skills`。物理 remote 是 `https://github.com/jieli-cqwl/org-skills.git`。
 
 本仓不拥有 runtime assistant / rules / reference，也不再 vendor Superpowers、Anthropic 或其他 community Skills。那些源树分别在 `base-config` 与 `daily-skills`。安装 Team 前必须在同一 target 上先装 Base。
 
@@ -34,9 +34,9 @@ Team first-party Skills、hooks、agents、protocols 与 standard-chain 合同�
 先安装 Base，再安装 Team。不要对真实用户 HOME 跑本仓 cutover 安装。
 
 ```bash
-git clone <repo-url> ~/org-claude-skills
-cd ~/org-claude-skills
-# Base must already be installed on the same target from /Users/lijieli/base-config
+git clone https://github.com/jieli-cqwl/org-skills.git
+cd org-skills
+# Base must already be installed on the same target from the base-config checkout
 bash install.sh --target all --dry-run
 ```
 

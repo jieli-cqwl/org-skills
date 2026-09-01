@@ -51,6 +51,15 @@ def assert_destinations_pushed() -> None:
             raise AssertionError(f"{repo_id}: origin HEAD {remote} != local HEAD {head}")
 
 
+class RemotesYamlTests(unittest.TestCase):
+    def test_team_remote_is_org_skills(self) -> None:
+        data = yaml.safe_load(REMOTES.read_text())
+        self.assertEqual(
+            data["repos"]["team-skills"],
+            "https://github.com/jieli-cqwl/org-skills.git",
+        )
+
+
 class DestinationProofTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:

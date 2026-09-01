@@ -2,7 +2,7 @@
 set -euo pipefail
 
 OWNER="${1:-jieli-cqwl}"
-REPO="${2:-org-claude-skills}"
+REPO="${2:-org-skills}"
 BRANCH="${3:-main}"
 
 echo "[guard] applying branch protection: ${OWNER}/${REPO}:${BRANCH}"
