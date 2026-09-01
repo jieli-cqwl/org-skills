@@ -510,7 +510,11 @@ def _is_under(path: Path, home: Path) -> bool:
 
 
 def _path_digest(path: Path) -> str:
-    if not path.exists() and not path.is_symlink():
+    if path.is_symlink():
+        # Journal identity only; do not follow. Installer digest rejects '..' hops.
+        target = os.readlink(path)
+        return hashlib.sha256(f"symlink\0{target}".encode("utf-8", "surrogateescape")).hexdigest()
+    if not path.exists():
         return ""
     return canonical_tree_digest(path)
 

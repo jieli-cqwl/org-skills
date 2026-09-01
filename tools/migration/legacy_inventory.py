@@ -173,6 +173,8 @@ _KNOWN_STATE_LEAF_NAMES = frozenset(
         "installed-version",
         "backup-manifest",
         "pruned-manifest",
+        # Old monolith install.sh 0-byte sentinel beside installed-manifest.
+        "agent-tuning-migration-v1",
         "claude-settings-baseline.json",
         "codex-hooks-baseline.json",
         "codex-hooks-feature-state.json",

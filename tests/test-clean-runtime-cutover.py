@@ -17,7 +17,7 @@ FIXTURE_HOME = ROOT / "tests/fixtures/runtime-cutover/preflight-home"
 
 from tools.install.tree_digest import canonical_tree_digest
 from tools.migration.action_plan import ActionClass, build_action_plan
-from tools.migration.clean_runtime_cutover import apply_action_plan
+from tools.migration.clean_runtime_cutover import _persist_remove_preflight, apply_action_plan
 
 TEAM_AGENT_SECTIONS = (
     (
@@ -98,6 +98,18 @@ class ActionPlanTests(unittest.TestCase):
         mystery = str(home / ".org-skills-state/mystery.txt")
         self.assertTrue(any(a.path == mystery and a.cls == ActionClass.CONFLICT for a in plan.actions))
 
+    def test_agent_tuning_migration_sentinel_is_delete_legacy_state(self) -> None:
+        home = self._home()
+        sentinel = home / ".org-skills-state/codex/agent-tuning-migration-v1"
+        sentinel.parent.mkdir(parents=True, exist_ok=True)
+        sentinel.write_bytes(b"")
+        plan = build_action_plan(home, pre_split_tag="pre-split-2026-08-31")
+        by_path = {a.path: a.cls for a in plan.actions}
+        self.assertEqual(by_path[str(sentinel)], ActionClass.DELETE_LEGACY_STATE)
+        mystery = str(home / ".org-skills-state/mystery.txt")
+        self.assertEqual(by_path[mystery], ActionClass.CONFLICT)
+        self.assertEqual(plan.status, "blocked")
+
     def test_explained_drift_keeps_preserve_and_explicit_delete(self) -> None:
         home = self._home()
         learned = home / ".claude/skills/learned/x.md"
@@ -120,6 +132,14 @@ class ActionPlanTests(unittest.TestCase):
         self.assertEqual(
             by_path[str(home / ".org-skills-state/external-runtime-skills/codex.txt")],
             ActionClass.DELETE_LEGACY_STATE,
+        )
+        self.assertEqual(
+            by_path[str(home / ".org-skills-state/codex/agent-tuning-migration-v1")],
+            ActionClass.DELETE_LEGACY_STATE,
+        )
+        self.assertEqual(
+            by_path[str(home / ".org-skills-state/mystery.txt")],
+            ActionClass.CONFLICT,
         )
         for name in (
             "superset_notify.sh",
@@ -470,6 +490,26 @@ class ApplyActionPlanTests(unittest.TestCase):
             self.assertNotIn("body", row)
             self.assertNotIn("content", row)
             self.assertIn(row["status"], {"pending", "done", "skipped", "failed"})
+
+    def test_persist_preflight_digests_archive_parent_relative_symlink(self) -> None:
+        home = self._ready_home()
+        link = (
+            home
+            / ".org-skills-state/archive/dot-claude-retirement-20260326022826"
+            / "runtime-files/skills/design/references/review-iteration-protocol.md"
+        )
+        link.parent.mkdir(parents=True)
+        link.symlink_to("../../product/references/review-iteration-protocol.md")
+        plan = self._plan(home)
+        by_path = {action.path: action.cls for action in plan.actions}
+        self.assertEqual(by_path[str(link)], ActionClass.DELETE_LEGACY_STATE)
+        self.assertEqual(plan.status, "ready")
+        journal = _persist_remove_preflight(plan, home)
+        self.assertTrue(journal.is_file())
+        entries = self._journal_entries(journal)
+        row = next(item for item in entries if item["path"] == str(link))
+        self.assertEqual(row["cls"], ActionClass.DELETE_LEGACY_STATE.value)
+        self.assertTrue(row["pre_digest"])
 
     def test_apply_deletes_team_support_trees(self) -> None:
         home = self._ready_home()
